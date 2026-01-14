@@ -87,6 +87,7 @@ export const Header = ({ title, subtitle, onMenuClick, hidePeriodFilter = false 
                 onClick={onMenuClick}
                 className="p-2 rounded-xl hover:bg-muted transition-all duration-200 flex-shrink-0"
                 aria-label="Abrir menu"
+                data-tour="menu-toggle"
               >
                 <Menu size={22} className="text-foreground" />
               </button>
@@ -155,7 +156,7 @@ export const Header = ({ title, subtitle, onMenuClick, hidePeriodFilter = false 
 
           {/* Line 2: Period Filter - full width */}
           {!hidePeriodFilter && (
-            <div className="px-3 pb-3">
+            <div className="px-3 pb-3" data-tour="period-selector">
               <PeriodFilter value={period} onChange={setPeriod} />
             </div>
           )}
@@ -173,7 +174,9 @@ export const Header = ({ title, subtitle, onMenuClick, hidePeriodFilter = false 
             
             {/* Global Period Filter - Desktop */}
             {!hidePeriodFilter && (
-              <PeriodFilter value={period} onChange={setPeriod} />
+              <div data-tour="period-selector">
+                <PeriodFilter value={period} onChange={setPeriod} />
+              </div>
             )}
           </div>
 

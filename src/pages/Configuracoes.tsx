@@ -13,9 +13,10 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit2, CreditCard, Store, Percent, Trash2, Settings2, User, Loader2, Check } from "lucide-react";
+import { Plus, Edit2, CreditCard, Store, Percent, Trash2, Settings2, User, Loader2, Check, HelpCircle } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CreditFeesModal } from "@/components/configuracoes/CreditFeesModal";
+import { useOnboarding } from "@/hooks/useOnboarding";
 
 interface PaymentMethod {
   id: string;
@@ -50,6 +51,7 @@ const typeLabels: Record<string, string> = {
 const Configuracoes = () => {
   const { user, profile, updateProfile, refetchProfile } = useAuth();
   const queryClient = useQueryClient();
+  const { resetOnboarding } = useOnboarding();
   
   // State for profile
   const [profileName, setProfileName] = useState("");
@@ -424,6 +426,35 @@ const Configuracoes = () => {
                 ) : (
                   'Salvar Perfil'
                 )}
+              </Button>
+            </CardContent>
+          </Card>
+
+          {/* Onboarding Section */}
+          <Card className="glass-card">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <HelpCircle size={20} />
+                Tutorial de Boas-Vindas
+              </CardTitle>
+              <CardDescription>
+                Reveja o tour guiado que explica as principais funcionalidades do Dash 26
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Button 
+                variant="outline"
+                onClick={() => {
+                  resetOnboarding();
+                  toast({ 
+                    title: "Tutorial reiniciado!", 
+                    description: "Volte para o Dashboard para assistir o tutorial novamente." 
+                  });
+                }}
+                className="gap-2"
+              >
+                <HelpCircle size={16} />
+                Assistir Tutorial Novamente
               </Button>
             </CardContent>
           </Card>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { DashboardLayout } from "@/components/layout/DashboardLayout";
 import { MetricCard } from "@/components/dashboard/MetricCard";
@@ -8,6 +8,8 @@ import { SalesChart } from "@/components/dashboard/SalesChart";
 import { PaymentChart } from "@/components/dashboard/PaymentChart";
 import { TeamProfitRanking } from "@/components/dashboard/TeamProfitRanking";
 import { FloatingActionButton } from "@/components/layout/FloatingActionButton";
+import { OnboardingTour } from "@/components/onboarding/OnboardingTour";
+import { useOnboarding } from "@/hooks/useOnboarding";
 import { usePeriod } from "@/contexts/PeriodContext";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { Button } from "@/components/ui/button";
@@ -55,6 +57,8 @@ const Index = () => {
   const isMobile = useIsMobile();
   const [isVendaModalOpen, setIsVendaModalOpen] = useState(false);
   const [openChart, setOpenChart] = useState<string | null>(null);
+  const { shouldShowOnboarding, completeOnboarding } = useOnboarding();
+  const [runTour, setRunTour] = useState(false);
   
   // Convert to hook format
   const hookPeriod: PeriodFilterType = {
@@ -74,6 +78,17 @@ const Index = () => {
   const { data: salesChartData, isLoading: chartLoading } = useSalesChart(hookPeriod);
   const { data: paymentData, isLoading: paymentLoading } = usePaymentDistribution(hookPeriod);
   const { data: teamProfitData, isLoading: teamProfitLoading } = useTeamProfitability(hookPeriod);
+
+  // Start tour after component mounts and data is loaded
+  useEffect(() => {
+    if (shouldShowOnboarding && !metricsLoading) {
+      // Small delay to ensure DOM elements are ready
+      const timer = setTimeout(() => {
+        setRunTour(true);
+      }, 500);
+      return () => clearTimeout(timer);
+    }
+  }, [shouldShowOnboarding, metricsLoading]);
 
   const hasError = metricsError;
   // Considerar como "sem dados" apenas quando metrics foi carregado e está vazio
@@ -107,6 +122,7 @@ const Index = () => {
               <Button 
                 onClick={() => setIsVendaModalOpen(true)}
                 className="bg-gradient-primary hover:opacity-90 text-white rounded-xl gap-2 h-11 px-5"
+                data-tour="btn-nova-venda"
               >
                 <Plus size={18} />
                 Nova Venda
@@ -168,7 +184,7 @@ const Index = () => {
         )}
 
         {/* Level 1: Main KPIs - "Como está o mês?" - Single column on mobile */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6" data-tour="dashboard-kpis">
           {metricsLoading ? (
             <>
               {[1, 2, 3, 4].map((i) => (
@@ -362,6 +378,15 @@ const Index = () => {
       <FloatingActionButton
         onNewSale={() => setIsVendaModalOpen(true)}
         onNewPurchase={() => navigate('/compras/nova')}
+      />
+
+      {/* Onboarding Tour */}
+      <OnboardingTour 
+        run={runTour}
+        onComplete={() => {
+          setRunTour(false);
+          completeOnboarding();
+        }}
       />
     </DashboardLayout>
   );

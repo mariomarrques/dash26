@@ -70,6 +70,7 @@ export const FloatingActionButton = ({ onNewSale, onNewPurchase }: FloatingActio
             isOpen && "rotate-45"
           )}
           aria-label={isOpen ? "Fechar menu" : "Abrir menu de ações"}
+          data-tour="fab-main"
         >
           {isOpen ? (
             <X size={24} className="text-white" />

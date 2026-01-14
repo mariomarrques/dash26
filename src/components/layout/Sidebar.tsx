@@ -33,9 +33,10 @@ interface NavItemProps {
   label: string;
   to: string;
   collapsed?: boolean;
+  dataTour?: string;
 }
 
-const NavItem = ({ icon, label, to, collapsed }: NavItemProps) => {
+const NavItem = ({ icon, label, to, collapsed, dataTour }: NavItemProps) => {
   const location = useLocation();
   const isActive = location.pathname === to || 
     (to !== "/" && location.pathname.startsWith(to));
@@ -51,6 +52,7 @@ const NavItem = ({ icon, label, to, collapsed }: NavItemProps) => {
           : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
         collapsed && "justify-center px-0"
       )}
+      data-tour={dataTour}
     >
       {/* Active indicator */}
       {isActive && (
@@ -123,12 +125,12 @@ export const Sidebar = () => {
   };
 
   const navItems = [
-    { id: "dashboard", to: "/", icon: <LayoutDashboard size={20} />, label: "Dashboard" },
-    { id: "vendas", to: "/vendas", icon: <TrendingUp size={20} />, label: "Vendas" },
-    { id: "compras", to: "/compras", icon: <ShoppingCart size={20} />, label: "Compras" },
-    { id: "estoque", to: "/estoque", icon: <Package size={20} />, label: "Estoque" },
-    { id: "custos", to: "/custos", icon: <Receipt size={20} />, label: "Custos Fixos" },
-    { id: "margens", to: "/margens", icon: <PieChart size={20} />, label: "Margens" },
+    { id: "dashboard", to: "/", icon: <LayoutDashboard size={20} />, label: "Dashboard", dataTour: undefined },
+    { id: "vendas", to: "/vendas", icon: <TrendingUp size={20} />, label: "Vendas", dataTour: undefined },
+    { id: "compras", to: "/compras", icon: <ShoppingCart size={20} />, label: "Compras", dataTour: "nav-compras" },
+    { id: "estoque", to: "/estoque", icon: <Package size={20} />, label: "Estoque", dataTour: "nav-estoque" },
+    { id: "custos", to: "/custos", icon: <Receipt size={20} />, label: "Custos Fixos", dataTour: undefined },
+    { id: "margens", to: "/margens", icon: <PieChart size={20} />, label: "Margens", dataTour: "nav-margens" },
   ];
 
   return (
@@ -211,6 +213,7 @@ export const Sidebar = () => {
             label={item.label}
             to={item.to}
             collapsed={collapsed}
+            dataTour={item.dataTour}
           />
         ))}
       </nav>
@@ -242,6 +245,7 @@ export const Sidebar = () => {
           label="Configurações"
           to="/configuracoes"
           collapsed={collapsed}
+          dataTour="nav-configuracoes"
         />
       </div>
     </aside>
