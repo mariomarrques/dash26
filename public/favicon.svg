@@ -1,0 +1,13 @@
+<svg width="32" height="32" viewBox="0 0 48 48" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <linearGradient id="dash26-favicon-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#E85D04" />
+      <stop offset="50%" stop-color="#F48C06" />
+      <stop offset="100%" stop-color="#FAA307" />
+    </linearGradient>
+  </defs>
+  <rect x="4" y="4" width="40" height="40" rx="12" fill="url(#dash26-favicon-gradient)" />
+  <path d="M14 14h8c5.5 0 10 4.5 10 10s-4.5 10-10 10h-8V14z" fill="none" stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.95" />
+  <rect x="18" y="20" width="8" height="3" rx="1.5" fill="white" opacity="0.9" />
+  <rect x="18" y="25" width="5" height="3" rx="1.5" fill="white" opacity="0.7" />
+</svg>

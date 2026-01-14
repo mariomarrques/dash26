@@ -204,8 +204,8 @@ export const RecentActivity = ({ activities, isLoading }: RecentActivityProps) =
   if (activities.length === 0) {
     return (
       <div className="card-metric animate-fade-in">
-        <div className="flex items-center justify-between mb-6">
-          <h3 className="font-bold text-foreground text-lg">Atividade Recente</h3>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-label text-foreground tracking-[0.08em]">Atividade Recente</h3>
         </div>
         <div className="text-center py-12">
           <div className="w-16 h-16 rounded-full bg-gradient-primary mx-auto mb-4 flex items-center justify-center">
@@ -222,8 +222,8 @@ export const RecentActivity = ({ activities, isLoading }: RecentActivityProps) =
   return (
     <>
       <div className="card-metric animate-fade-in">
-        <div className="flex items-center justify-between mb-4 md:mb-6">
-          <h3 className="font-bold text-foreground text-base md:text-lg">Atividade Recente</h3>
+        <div className="flex items-center justify-between mb-5">
+          <h3 className="text-label text-foreground tracking-[0.08em]">Atividade Recente</h3>
         </div>
 
         <div className="space-y-1 md:space-y-2">

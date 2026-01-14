@@ -228,7 +228,7 @@ export default function NovaCompra() {
           order_date: orderDate,
           freight_brl: parseFloat(freightBrl) || 0,
           extra_fees_brl: parseFloat(extraFeesBrl) || 0,
-          arrival_tax_brl: source === "china" && shippingMode === "offline" 
+          arrival_tax_brl: source === "china" && (shippingMode === "offline" || shippingMode === "cssbuy")
             ? (arrivalTaxBrl ? parseFloat(arrivalTaxBrl) : null)
             : null,
           notes: notes || null,
@@ -276,8 +276,15 @@ export default function NovaCompra() {
       return purchaseOrder;
     },
     onSuccess: () => {
+      // Invalidar apenas queries essenciais
       queryClient.invalidateQueries({ queryKey: ["purchase_orders"] });
-      queryClient.invalidateQueries({ queryKey: ["stock_movements"] });
+      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ queryKey: ["recent-activity"] });
+      
+      // Removidas invalidações desnecessárias:
+      // - stock_movements, inventory_lots (atualizam por staleTime)
+      // - dashboard-metrics, quick-stats (atualizam por staleTime)
+      
       toast({
         title: "Compra registrada!",
         description: "O pedido foi salvo com sucesso.",
@@ -408,7 +415,7 @@ export default function NovaCompra() {
             {source === "china" && (
               <div className="space-y-3">
                 <Label>Modo de Envio</Label>
-                <RadioGroup value={shippingMode} onValueChange={setShippingMode} className="flex gap-4">
+                <RadioGroup value={shippingMode} onValueChange={setShippingMode} className="flex gap-4 flex-wrap">
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="remessa" id="remessa" />
                     <Label htmlFor="remessa" className="font-normal cursor-pointer">
@@ -419,6 +426,12 @@ export default function NovaCompra() {
                     <RadioGroupItem value="offline" id="offline" />
                     <Label htmlFor="offline" className="font-normal cursor-pointer">
                       Offline
+                    </Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="cssbuy" id="cssbuy" />
+                    <Label htmlFor="cssbuy" className="font-normal cursor-pointer">
+                      CSSBuy
                     </Label>
                   </div>
                 </RadioGroup>
@@ -448,6 +461,23 @@ export default function NovaCompra() {
                 <div className="space-y-2">
                   <Label className="flex items-center gap-2">
                     Taxa Brasil (R$)
+                    <Badge variant="outline" className="text-xs font-normal">opcional</Badge>
+                  </Label>
+                  <MoneyInput 
+                    value={parseFloat(arrivalTaxBrl) || 0}
+                    onChange={(value) => setArrivalTaxBrl(value.toString())}
+                  />
+                  <p className="text-xs text-muted-foreground flex items-center gap-1">
+                    <Info size={12} />
+                    Você pode adicionar essa taxa depois, quando o pacote chegar.
+                  </p>
+                </div>
+              )}
+
+              {source === "china" && shippingMode === "cssbuy" && (
+                <div className="space-y-2">
+                  <Label className="flex items-center gap-2">
+                    Taxa (R$)
                     <Badge variant="outline" className="text-xs font-normal">opcional</Badge>
                   </Label>
                   <MoneyInput 

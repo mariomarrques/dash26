@@ -1,6 +1,6 @@
 import { SalesChartData } from "@/hooks/useDashboardData";
 import { Skeleton } from "@/components/ui/skeleton";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend, Area, AreaChart } from "recharts";
 import { useState } from "react";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
@@ -22,7 +22,7 @@ export function SalesChart({ data, isLoading }: SalesChartProps) {
 
   if (isLoading) {
     return (
-      <div className="card-metric p-6">
+      <div className="card-metric">
         <Skeleton className="h-5 w-40 mb-4 rounded" />
         <Skeleton className="h-[200px] w-full rounded-xl" />
       </div>
@@ -33,8 +33,8 @@ export function SalesChart({ data, isLoading }: SalesChartProps) {
 
   if (!hasData) {
     return (
-      <div className="card-metric p-6">
-        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide mb-4">
+      <div className="card-metric">
+        <h3 className="text-label mb-4">
           Vendas no Período
         </h3>
         <div className="h-[200px] flex items-center justify-center">
@@ -47,9 +47,9 @@ export function SalesChart({ data, isLoading }: SalesChartProps) {
   }
 
   return (
-    <div className="card-metric p-6">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">
+    <div className="card-metric">
+      <div className="flex items-center justify-between mb-5">
+        <h3 className="text-label">
           Vendas no Período
         </h3>
         <div className="flex items-center gap-2">
@@ -59,7 +59,7 @@ export function SalesChart({ data, isLoading }: SalesChartProps) {
             onCheckedChange={setShowComparison}
             className="data-[state=checked]:bg-primary"
           />
-          <Label htmlFor="comparison" className="text-xs text-muted-foreground cursor-pointer">
+          <Label htmlFor="comparison" className="text-xs text-muted-foreground cursor-pointer font-medium">
             Comparar
           </Label>
         </div>
@@ -67,11 +67,22 @@ export function SalesChart({ data, isLoading }: SalesChartProps) {
       
       <div className="h-[200px]">
         <ResponsiveContainer width="100%" height="100%">
-          <LineChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+          <AreaChart data={data} margin={{ top: 5, right: 10, left: 0, bottom: 5 }}>
+            <defs>
+              <linearGradient id="colorCurrent" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+              </linearGradient>
+              <linearGradient id="colorPrevious" x1="0" y1="0" x2="0" y2="1">
+                <stop offset="5%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0.2}/>
+                <stop offset="95%" stopColor="hsl(var(--muted-foreground))" stopOpacity={0}/>
+              </linearGradient>
+            </defs>
             <CartesianGrid 
               strokeDasharray="3 3" 
               stroke="hsl(var(--border))" 
-              opacity={0.3}
+              opacity={0.5}
+              vertical={false}
             />
             <XAxis 
               dataKey="date" 
@@ -91,7 +102,9 @@ export function SalesChart({ data, isLoading }: SalesChartProps) {
                 background: 'hsl(var(--card))',
                 border: '1px solid hsl(var(--border))',
                 borderRadius: '12px',
-                boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+                boxShadow: '0 8px 24px rgba(0,0,0,0.15)',
+                fontSize: '12px',
+                fontWeight: '500'
               }}
               formatter={(value: number) => [
                 new Intl.NumberFormat('pt-BR', { 
@@ -99,33 +112,37 @@ export function SalesChart({ data, isLoading }: SalesChartProps) {
                   currency: 'BRL' 
                 }).format(value),
               ]}
-              labelStyle={{ color: 'hsl(var(--foreground))' }}
+              labelStyle={{ color: 'hsl(var(--foreground))', fontWeight: 600 }}
             />
             {showComparison && (
-              <Line
-                type="monotone"
-                dataKey="previous"
-                name="Mês anterior"
-                stroke="hsl(var(--muted-foreground))"
-                strokeWidth={2}
-                strokeDasharray="5 5"
-                dot={false}
-                activeDot={{ r: 4, fill: 'hsl(var(--muted-foreground))' }}
-              />
+              <>
+                <Area
+                  type="monotone"
+                  dataKey="previous"
+                  name="Mês anterior"
+                  stroke="hsl(var(--muted-foreground))"
+                  strokeWidth={2}
+                  strokeDasharray="5 5"
+                  fill="url(#colorPrevious)"
+                  activeDot={{ r: 4, fill: 'hsl(var(--muted-foreground))' }}
+                />
+              </>
             )}
-            <Line
+            <Area
               type="monotone"
               dataKey="current"
               name="Mês atual"
               stroke="hsl(var(--primary))"
-              strokeWidth={3}
-              dot={false}
+              strokeWidth={2.5}
+              fill="url(#colorCurrent)"
               activeDot={{ r: 6, fill: 'hsl(var(--primary))', stroke: 'white', strokeWidth: 2 }}
             />
-            {showComparison && <Legend />}
-          </LineChart>
+            {showComparison && <Legend wrapperStyle={{ fontSize: '11px' }} />}
+          </AreaChart>
         </ResponsiveContainer>
       </div>
     </div>
   );
 }
+
+// Reposicionamento visual aplicado: identidade própria do Dash 26 estabelecida

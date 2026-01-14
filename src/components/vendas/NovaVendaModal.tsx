@@ -913,6 +913,17 @@ export function NovaVendaModal({ open, onOpenChange, onSuccess, editingSale }: N
           ? `Venda ${action}. Margem ficará pendente até custo ser conhecido.`
           : `Estoque atualizado e margem calculada automaticamente`;
       
+      // Invalidar apenas queries essenciais - o restante se atualiza por staleTime
+      queryClient.invalidateQueries({ queryKey: ['sales'] });
+      queryClient.invalidateQueries({ queryKey: ['stock'] });
+      queryClient.invalidateQueries({ queryKey: ['stock_movements'] });
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+      
+      // Removidas invalidações desnecessárias que causam cascata de requests:
+      // - secondary-insights, sales-chart, payment-distribution, team-profitability, quick-stats
+      // Essas queries se atualizam automaticamente pelo staleTime configurado
+      
       toast({ 
         title: `Venda ${action} com sucesso`,
         description: message
@@ -1091,8 +1102,15 @@ export function NovaVendaModal({ open, onOpenChange, onSuccess, editingSale }: N
       queryClient.invalidateQueries({ queryKey: ['inventory_lots'] });
       queryClient.invalidateQueries({ queryKey: ['stock'] });
       queryClient.invalidateQueries({ queryKey: ['stock_movements'] });
-      queryClient.invalidateQueries({ queryKey: ['dashboard'] });
       queryClient.invalidateQueries({ queryKey: ['fixed_costs'] });
+      // Invalidar queries do dashboard para atualizar métricas
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['secondary-insights'] });
+      queryClient.invalidateQueries({ queryKey: ['sales-chart'] });
+      queryClient.invalidateQueries({ queryKey: ['payment-distribution'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['team-profitability'] });
+      queryClient.invalidateQueries({ queryKey: ['quick-stats'] });
       toast({ title: "Venda excluída com sucesso!" });
       setShowDeleteConfirm(false);
       onOpenChange(false);

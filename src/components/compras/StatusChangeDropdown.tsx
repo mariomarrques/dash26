@@ -149,11 +149,25 @@ export function StatusChangeDropdown({
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["purchase_orders"] });
-      queryClient.invalidateQueries({ queryKey: ["inventory_lots"] });
-      queryClient.invalidateQueries({ queryKey: ["stock"] });
-      queryClient.invalidateQueries({ queryKey: ["stock_movements"] });
+      // Invalidar e forçar refetch imediato de queries críticas
+      queryClient.invalidateQueries({ 
+        queryKey: ["purchase_orders"],
+        refetchType: 'active' 
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["inventory_lots"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock"],
+        refetchType: 'active' // Força refetch de todas queries de stock ativas
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock_movements"],
+        refetchType: 'active'
+      });
       queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      
       toast({ title: `Status alterado para "${statusLabels[pendingStatus!]}"` });
       setShowConfirmDialog(false);
       setPendingStatus(null);

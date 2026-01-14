@@ -62,7 +62,13 @@ const Index = () => {
     comparison: period.comparison
   };
   
-  const { data: metrics, isLoading: metricsLoading, error: metricsError, refetch: refetchMetrics } = useDashboardMetrics(hookPeriod);
+  const { 
+    data: metrics, 
+    isLoading: metricsLoading, 
+    error: metricsError, 
+    refetch: refetchMetrics,
+    isFetching: metricsFetching 
+  } = useDashboardMetrics(hookPeriod);
   const { data: recentActivity, isLoading: activityLoading, refetch: refetchActivity } = useRecentActivity();
   const { data: insights, isLoading: insightsLoading } = useSecondaryInsights(hookPeriod);
   const { data: salesChartData, isLoading: chartLoading } = useSalesChart(hookPeriod);
@@ -70,7 +76,8 @@ const Index = () => {
   const { data: teamProfitData, isLoading: teamProfitLoading } = useTeamProfitability(hookPeriod);
 
   const hasError = metricsError;
-  const hasNoData = metrics && metrics.revenue === 0 && metrics.stockItems === 0;
+  // Considerar como "sem dados" apenas quando metrics foi carregado e está vazio
+  const hasNoData = !metricsLoading && !metricsFetching && metrics && metrics.revenue === 0 && metrics.stockItems === 0;
   const isComparing = !!period.comparison;
 
   const handleVendaSuccess = () => {
@@ -143,9 +150,20 @@ const Index = () => {
         {/* Error State */}
         {hasError && (
           <div className="card-metric text-center py-6 md:py-8 border-destructive/20 bg-destructive/5 animate-fade-in">
-            <p className="text-destructive font-medium text-sm md:text-base">
-              Não foi possível carregar agora. Tente novamente.
+            <p className="text-destructive font-medium text-sm md:text-base mb-3">
+              Não foi possível carregar os dados. 
             </p>
+            <Button 
+              variant="outline" 
+              size="sm"
+              onClick={() => {
+                refetchMetrics();
+                refetchActivity();
+              }}
+              className="text-destructive border-destructive/30 hover:bg-destructive/10"
+            >
+              Tentar novamente
+            </Button>
           </div>
         )}
 

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -13,7 +13,7 @@ import { Switch } from "@/components/ui/switch";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Plus, Edit2, CreditCard, Store, Percent, Trash2, Settings2 } from "lucide-react";
+import { Plus, Edit2, CreditCard, Store, Percent, Trash2, Settings2, User, Loader2, Check } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { CreditFeesModal } from "@/components/configuracoes/CreditFeesModal";
 
@@ -48,8 +48,51 @@ const typeLabels: Record<string, string> = {
 };
 
 const Configuracoes = () => {
-  const { user } = useAuth();
+  const { user, profile, updateProfile, refetchProfile } = useAuth();
   const queryClient = useQueryClient();
+  
+  // State for profile
+  const [profileName, setProfileName] = useState("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
+  const [profileSaved, setProfileSaved] = useState(false);
+
+  // Sync profile name with auth context
+  useEffect(() => {
+    if (profile?.name) {
+      setProfileName(profile.name);
+    }
+  }, [profile?.name]);
+
+  // Save profile handler
+  const handleSaveProfile = async () => {
+    if (!profileName.trim()) {
+      toast({ title: "Nome obrigatório", description: "Por favor, insira seu nome.", variant: "destructive" });
+      return;
+    }
+    
+    setIsSavingProfile(true);
+    setProfileSaved(false);
+    
+    try {
+      const { error } = await updateProfile(profileName.trim());
+      
+      if (error) {
+        throw error;
+      }
+      
+      await refetchProfile();
+      setProfileSaved(true);
+      toast({ title: "Perfil atualizado", description: "Seu nome foi salvo com sucesso." });
+      
+      // Reset success state after 2 seconds
+      setTimeout(() => setProfileSaved(false), 2000);
+    } catch (error) {
+      console.error('Error saving profile:', error);
+      toast({ title: "Erro", description: "Não foi possível salvar o perfil.", variant: "destructive" });
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
   
   // State for modals
   const [methodModalOpen, setMethodModalOpen] = useState(false);
@@ -308,11 +351,15 @@ const Configuracoes = () => {
 
   return (
     <DashboardLayout title="Configurações" subtitle="Personalize métodos de pagamento e canais">
-      <Tabs defaultValue="methods" className="space-y-6">
+      <Tabs defaultValue="profile" className="space-y-6">
         <TabsList className="bg-muted/50">
+          <TabsTrigger value="profile" className="gap-2">
+            <User size={16} />
+            Perfil
+          </TabsTrigger>
           <TabsTrigger value="methods" className="gap-2">
             <CreditCard size={16} />
-            Métodos de Pagamento
+            Pagamentos
           </TabsTrigger>
           <TabsTrigger value="fees" className="gap-2">
             <Percent size={16} />
@@ -320,9 +367,67 @@ const Configuracoes = () => {
           </TabsTrigger>
           <TabsTrigger value="channels" className="gap-2">
             <Store size={16} />
-            Canais de Venda
+            Canais
           </TabsTrigger>
         </TabsList>
+
+        {/* Profile Tab */}
+        <TabsContent value="profile" className="space-y-4">
+          <div>
+            <h3 className="text-lg font-semibold">Seu Perfil</h3>
+            <p className="text-sm text-muted-foreground">Gerencie suas informações pessoais</p>
+          </div>
+
+          <Card className="glass-card">
+            <CardContent className="pt-6 space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="profile-name">Nome</Label>
+                <Input
+                  id="profile-name"
+                  placeholder="Seu nome completo"
+                  value={profileName}
+                  onChange={(e) => setProfileName(e.target.value)}
+                  className="max-w-md"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Este nome será exibido no app e em relatórios.
+                </p>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Email</Label>
+                <Input
+                  value={user?.email || ""}
+                  disabled
+                  className="max-w-md bg-muted"
+                />
+                <p className="text-xs text-muted-foreground">
+                  O email não pode ser alterado.
+                </p>
+              </div>
+
+              <Button 
+                onClick={handleSaveProfile} 
+                disabled={isSavingProfile || !profileName.trim()}
+                className="gap-2"
+              >
+                {isSavingProfile ? (
+                  <>
+                    <Loader2 size={16} className="animate-spin" />
+                    Salvando...
+                  </>
+                ) : profileSaved ? (
+                  <>
+                    <Check size={16} />
+                    Salvo!
+                  </>
+                ) : (
+                  'Salvar Perfil'
+                )}
+              </Button>
+            </CardContent>
+          </Card>
+        </TabsContent>
 
         {/* Payment Methods Tab */}
         <TabsContent value="methods" className="space-y-4">

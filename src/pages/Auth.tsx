@@ -10,9 +10,11 @@ import { z } from 'zod';
 import { supabase } from '@/integrations/supabase/client';
 import { cn } from '@/lib/utils';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Logo } from '@/components/ui/logo';
 
 const emailSchema = z.string().email('Email inválido');
 const passwordSchema = z.string().min(6, 'Senha deve ter pelo menos 6 caracteres');
+const nameSchema = z.string().min(2, 'Nome deve ter pelo menos 2 caracteres');
 
 // Google Icon Component
 const GoogleIcon = () => (
@@ -68,29 +70,29 @@ const InteractiveGradientOrb = ({
   />
 );
 
-// Animated flowing gradient background
+// Animated flowing gradient background - Dash 26 (Laranja/Cobre)
 const FlowingGradient = ({ mouseX, mouseY }: { mouseX: number; mouseY: number }) => (
   <div 
     className="absolute inset-0 transition-all duration-700 ease-out"
     style={{
       background: `
-        radial-gradient(ellipse 80% 60% at ${50 + mouseX * 0.3}% ${40 + mouseY * 0.3}%, rgba(139, 92, 246, 0.25) 0%, transparent 50%),
-        radial-gradient(ellipse 60% 80% at ${70 + mouseX * 0.2}% ${60 + mouseY * 0.2}%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse 70% 50% at ${30 - mouseX * 0.25}% ${70 - mouseY * 0.25}%, rgba(59, 130, 246, 0.2) 0%, transparent 50%)
+        radial-gradient(ellipse 80% 60% at ${50 + mouseX * 0.3}% ${40 + mouseY * 0.3}%, rgba(232, 93, 4, 0.2) 0%, transparent 50%),
+        radial-gradient(ellipse 60% 80% at ${70 + mouseX * 0.2}% ${60 + mouseY * 0.2}%, rgba(244, 140, 6, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 70% 50% at ${30 - mouseX * 0.25}% ${70 - mouseY * 0.25}%, rgba(250, 163, 7, 0.12) 0%, transparent 50%)
       `,
     }}
   />
 );
 
-// Mobile scroll-reactive gradient
+// Mobile scroll-reactive gradient - Dash 26 (Laranja/Cobre)
 const MobileGradient = ({ scrollY }: { scrollY: number }) => (
   <div 
     className="absolute inset-0 transition-all duration-300 ease-out"
     style={{
       background: `
-        radial-gradient(ellipse 100% 80% at 50% ${30 + scrollY * 0.1}%, rgba(139, 92, 246, 0.3) 0%, transparent 50%),
-        radial-gradient(ellipse 80% 100% at 80% ${60 - scrollY * 0.05}%, rgba(236, 72, 153, 0.2) 0%, transparent 50%),
-        radial-gradient(ellipse 90% 70% at 20% ${80 + scrollY * 0.08}%, rgba(59, 130, 246, 0.2) 0%, transparent 50%)
+        radial-gradient(ellipse 100% 80% at 50% ${30 + scrollY * 0.1}%, rgba(232, 93, 4, 0.25) 0%, transparent 50%),
+        radial-gradient(ellipse 80% 100% at 80% ${60 - scrollY * 0.05}%, rgba(244, 140, 6, 0.15) 0%, transparent 50%),
+        radial-gradient(ellipse 90% 70% at 20% ${80 + scrollY * 0.08}%, rgba(250, 163, 7, 0.12) 0%, transparent 50%)
       `,
     }}
   />
@@ -104,7 +106,7 @@ export default function Auth() {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
-  const [errors, setErrors] = useState<{ email?: string; password?: string }>({});
+  const [errors, setErrors] = useState<{ email?: string; password?: string; name?: string }>({});
   const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
   const [scrollY, setScrollY] = useState(0);
   const [isVisible, setIsVisible] = useState(false);
@@ -169,7 +171,15 @@ export default function Auth() {
   }
 
   const validateForm = () => {
-    const newErrors: { email?: string; password?: string } = {};
+    const newErrors: { email?: string; password?: string; name?: string } = {};
+    
+    // Validate name only for signup
+    if (!isLogin) {
+      const nameResult = nameSchema.safeParse(name);
+      if (!nameResult.success) {
+        newErrors.name = nameResult.error.errors[0].message;
+      }
+    }
     
     const emailResult = emailSchema.safeParse(email);
     if (!emailResult.success) {
@@ -259,7 +269,7 @@ export default function Auth() {
           handleLoginSuccess();
         }
       } else {
-        const { error } = await signUp(email, password, name || undefined);
+        const { error } = await signUp(email, password, name);
         setLoading(false);
         if (error) {
           if (error.message.includes('already registered')) {
@@ -311,14 +321,14 @@ export default function Auth() {
           {/* Flowing gradients that follow mouse */}
           <FlowingGradient mouseX={mousePosition.x} mouseY={mousePosition.y} />
           
-          {/* Interactive orbs with different intensities */}
+          {/* Interactive orbs with different intensities - Dash 26 (Laranja/Cobre) */}
           <InteractiveGradientOrb 
             mouseX={mousePosition.x} 
             mouseY={mousePosition.y} 
             baseX={-5} 
             baseY={-5} 
             size={700} 
-            color="radial-gradient(circle, hsl(265, 89%, 45%) 0%, transparent 60%)"
+            color="radial-gradient(circle, hsl(24, 95%, 46%) 0%, transparent 60%)"
             intensity={1.2}
           />
           <InteractiveGradientOrb 
@@ -327,7 +337,7 @@ export default function Auth() {
             baseX={65} 
             baseY={55} 
             size={550} 
-            color="radial-gradient(circle, hsl(280, 80%, 40%) 0%, transparent 60%)"
+            color="radial-gradient(circle, hsl(32, 95%, 49%) 0%, transparent 60%)"
             intensity={0.8}
           />
           <InteractiveGradientOrb 
@@ -336,7 +346,7 @@ export default function Auth() {
             baseX={45} 
             baseY={-15} 
             size={450} 
-            color="radial-gradient(circle, hsl(220, 90%, 50%) 0%, transparent 60%)"
+            color="radial-gradient(circle, hsl(38, 92%, 50%) 0%, transparent 60%)"
             intensity={1.5}
           />
           <InteractiveGradientOrb 
@@ -345,7 +355,7 @@ export default function Auth() {
             baseX={85} 
             baseY={15} 
             size={400} 
-            color="radial-gradient(circle, hsl(340, 80%, 45%) 0%, transparent 60%)"
+            color="radial-gradient(circle, hsl(20, 90%, 42%) 0%, transparent 60%)"
             intensity={0.6}
           />
           
@@ -361,11 +371,11 @@ export default function Auth() {
             }}
           />
           
-          {/* Radial glow from center - also follows mouse */}
+          {/* Radial glow from center - also follows mouse - Dash 26 */}
           <div 
             className="absolute inset-0 transition-all duration-500 ease-out"
             style={{
-              background: `radial-gradient(ellipse at ${50 + mousePosition.x * 0.5}% ${50 + mousePosition.y * 0.5}%, rgba(139,92,246,0.2) 0%, transparent 60%)`,
+              background: `radial-gradient(ellipse at ${50 + mousePosition.x * 0.5}% ${50 + mousePosition.y * 0.5}%, rgba(232, 93, 4, 0.15) 0%, transparent 60%)`,
             }}
           />
         </div>
@@ -380,13 +390,13 @@ export default function Auth() {
           {/* Mobile flowing gradients that react to scroll */}
           <MobileGradient scrollY={scrollY} />
           
-          {/* Simplified orbs for mobile - static but animated */}
+          {/* Simplified orbs for mobile - Dash 26 (Laranja/Cobre) */}
           <div 
             className="absolute rounded-full blur-3xl opacity-40 animate-pulse-slow"
             style={{
               width: 400,
               height: 400,
-              background: 'radial-gradient(circle, hsl(265, 89%, 45%) 0%, transparent 60%)',
+              background: 'radial-gradient(circle, hsl(24, 95%, 46%) 0%, transparent 60%)',
               left: '-15%',
               top: '-10%',
             }}
@@ -396,7 +406,7 @@ export default function Auth() {
             style={{
               width: 350,
               height: 350,
-              background: 'radial-gradient(circle, hsl(280, 80%, 40%) 0%, transparent 60%)',
+              background: 'radial-gradient(circle, hsl(32, 95%, 49%) 0%, transparent 60%)',
               right: '-10%',
               top: '50%',
             }}
@@ -406,7 +416,7 @@ export default function Auth() {
             style={{
               width: 300,
               height: 300,
-              background: 'radial-gradient(circle, hsl(340, 80%, 45%) 0%, transparent 60%)',
+              background: 'radial-gradient(circle, hsl(38, 92%, 50%) 0%, transparent 60%)',
               left: '20%',
               bottom: '-5%',
             }}
@@ -425,15 +435,19 @@ export default function Auth() {
           )}
         >
           <div className="max-w-xl text-center lg:text-left">
+            {/* Logo - Desktop */}
+            <div className="mb-8">
+              <Logo size="xl" variant="full" forceWhiteText />
+            </div>
             <h1 className="text-4xl lg:text-5xl xl:text-6xl font-bold leading-tight tracking-tight">
-              <span className="text-white">Bem-vindo ao </span>
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent">
-                coração e cérebro
+              <span className="text-white">Controle </span>
+              <span className="bg-gradient-to-r from-[#E85D04] via-[#F48C06] to-[#FAA307] bg-clip-text text-transparent">
+                financeiro premium
               </span>
-              <span className="text-white"> do seu negócio</span>
+              <span className="text-white"> para o seu negócio</span>
             </h1>
             <p className="mt-6 text-lg text-white/50">
-              Controle financeiro e operacional para quem trabalha com camisas esportivas.
+              Gerencie suas finanças com inteligência e elegância.
             </p>
           </div>
         </div>
@@ -445,26 +459,28 @@ export default function Auth() {
             isVisible ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"
           )}
         >
-          {/* Mobile Hero Text - Simplified, no subtitle */}
+          {/* Mobile Hero Text - Dash 26 */}
           <div className="lg:hidden text-center mb-6 sm:mb-8 px-2">
+            <div className="mb-4">
+              <Logo size="lg" variant="full" forceWhiteText className="justify-center" />
+            </div>
             <h1 className="text-[1.625rem] sm:text-3xl font-bold leading-snug tracking-tight">
-              <span className="text-white">Bem-vindo ao </span>
-              <span className="bg-gradient-to-r from-purple-400 via-pink-400 to-purple-500 bg-clip-text text-transparent">
-                coração e cérebro
+              <span className="text-white">Controle </span>
+              <span className="bg-gradient-to-r from-[#E85D04] via-[#F48C06] to-[#FAA307] bg-clip-text text-transparent">
+                financeiro premium
               </span>
-              <span className="text-white"> do seu negócio</span>
             </h1>
           </div>
 
-          {/* Glass Card - Enhanced for mobile with loading overlay */}
+          {/* Glass Card - Dash 26 Premium Dark */}
           <div 
             className={cn(
               "w-full max-w-md mx-auto relative",
               "bg-white/[0.04] lg:bg-white/[0.03] backdrop-blur-xl",
-              "border border-white/[0.15] lg:border-white/10",
+              "border border-white/[0.08] lg:border-white/[0.06]",
               "rounded-2xl sm:rounded-3xl",
               "p-6 sm:p-8 lg:p-8",
-              "shadow-2xl shadow-purple-500/10",
+              "shadow-2xl shadow-black/40",
               "transition-all duration-500 ease-out delay-300",
               isVisible ? "opacity-100 scale-100" : "opacity-0 scale-95",
               loginSuccess && "scale-[0.98] opacity-90"
@@ -474,7 +490,7 @@ export default function Auth() {
             <div 
               className={cn(
                 "absolute inset-0 rounded-2xl sm:rounded-3xl z-20",
-                "bg-black/20 backdrop-blur-[2px]",
+                "bg-black/30 backdrop-blur-[2px]",
                 "flex items-center justify-center",
                 "transition-opacity duration-200",
                 isAnyLoading ? "opacity-100 pointer-events-auto" : "opacity-0 pointer-events-none"
@@ -482,8 +498,8 @@ export default function Auth() {
             >
               <div className="flex flex-col items-center gap-3">
                 <div className="relative">
-                  <div className="absolute inset-0 rounded-full bg-purple-500/30 blur-xl animate-pulse" />
-                  <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-purple-400 relative" />
+                  <div className="absolute inset-0 rounded-full bg-primary/30 blur-xl animate-pulse" />
+                  <Loader2 className="h-8 w-8 sm:h-10 sm:w-10 animate-spin text-primary relative" />
                 </div>
                 <span className="text-white/70 text-sm font-medium">
                   {googleLoading ? 'Conectando ao Google...' : 'Autenticando...'}
@@ -550,23 +566,30 @@ export default function Auth() {
               {!isLogin && (
                 <div className="space-y-2">
                   <Label htmlFor="name" className="text-white/70 text-sm font-medium">
-                    Nome (opcional)
+                    Nome <span className="text-primary">*</span>
                   </Label>
                   <Input
                     id="name"
                     type="text"
-                    placeholder="Seu nome"
+                    placeholder="Seu nome completo"
                     value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    onChange={(e) => {
+                      setName(e.target.value);
+                      if (errors.name) setErrors({ ...errors, name: undefined });
+                    }}
                     disabled={loading || googleLoading}
                     className={cn(
                       "h-12 sm:h-12 rounded-xl w-full",
-                      "bg-white/[0.08] border-white/20",
+                      "bg-white/[0.06] border-white/10",
                       "text-white placeholder:text-white/40",
-                      "focus:border-purple-500/60 focus:ring-purple-500/30 focus:ring-2",
-                      "transition-all duration-200"
+                      "focus:border-primary/60 focus:ring-primary/30 focus:ring-2",
+                      "transition-all duration-200",
+                      errors.name && "border-destructive/50"
                     )}
                   />
+                  {errors.name && (
+                    <p className="text-sm text-red-400">{errors.name}</p>
+                  )}
                 </div>
               )}
 
@@ -586,11 +609,11 @@ export default function Auth() {
                   disabled={loading || googleLoading}
                   className={cn(
                     "h-12 sm:h-12 rounded-xl w-full",
-                    "bg-white/[0.08] border-white/20",
+                    "bg-white/[0.06] border-white/10",
                     "text-white placeholder:text-white/40",
-                    "focus:border-purple-500/60 focus:ring-purple-500/30 focus:ring-2",
+                    "focus:border-primary/60 focus:ring-primary/30 focus:ring-2",
                     "transition-all duration-200",
-                    errors.email && "border-red-500/50"
+                    errors.email && "border-destructive/50"
                   )}
                 />
                 {errors.email && (
@@ -615,11 +638,11 @@ export default function Auth() {
                     disabled={loading || googleLoading}
                     className={cn(
                       "h-12 sm:h-12 rounded-xl pr-12 w-full",
-                      "bg-white/[0.08] border-white/20",
+                      "bg-white/[0.06] border-white/10",
                       "text-white placeholder:text-white/40",
-                      "focus:border-purple-500/60 focus:ring-purple-500/30 focus:ring-2",
+                      "focus:border-primary/60 focus:ring-primary/30 focus:ring-2",
                       "transition-all duration-200",
-                      errors.password && "border-red-500/50"
+                      errors.password && "border-destructive/50"
                     )}
                   />
                   <button
@@ -639,13 +662,13 @@ export default function Auth() {
                 type="submit" 
                 className={cn(
                   "w-full min-h-[52px] h-auto py-3 mt-2 relative overflow-hidden",
-                  "bg-gradient-to-r from-purple-600 via-purple-500 to-pink-500",
-                  "hover:from-purple-500 hover:via-purple-400 hover:to-pink-400",
+                  "bg-gradient-to-r from-[#D35400] via-[#E85D04] to-[#F48C06]",
+                  "hover:from-[#E85D04] hover:via-[#F48C06] hover:to-[#FAA307]",
                   "text-white text-base font-semibold",
                   "rounded-xl",
-                  "shadow-lg shadow-purple-500/25",
+                  "shadow-lg shadow-[#E85D04]/25",
                   "transition-all duration-200",
-                  "hover:scale-[1.02] hover:shadow-purple-500/40",
+                  "hover:scale-[1.02] hover:shadow-[#E85D04]/40",
                   "active:scale-[0.98]",
                   "disabled:opacity-70 disabled:cursor-not-allowed disabled:hover:scale-100",
                   loginSuccess && "bg-gradient-to-r from-emerald-500 to-green-500 shadow-emerald-500/40"
@@ -690,8 +713,8 @@ export default function Auth() {
                 )}
               >
                 {isLogin 
-                  ? <>Não tem conta? <span className="text-purple-400 font-medium">Criar agora</span></>
-                  : <>Já tem conta? <span className="text-purple-400 font-medium">Entrar</span></>
+                  ? <>Não tem conta? <span className="text-primary font-medium">Criar agora</span></>
+                  : <>Já tem conta? <span className="text-primary font-medium">Entrar</span></>
                 }
               </button>
             </div>
@@ -702,7 +725,7 @@ export default function Auth() {
 
       {/* Footer - Hidden on mobile for cleaner experience */}
       <div className="hidden lg:block absolute bottom-4 left-0 right-0 text-center">
-        <p className="text-xs text-white/20">© 2024 Painel 55</p>
+        <p className="text-xs text-white/20">© 2026 Dash 26</p>
       </div>
 
       {/* CSS for animations */}

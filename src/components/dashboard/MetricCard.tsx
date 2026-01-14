@@ -49,7 +49,7 @@ export const MetricCard = ({
     <div className="flex items-center gap-1.5">
       <span className={cn(
         "text-label",
-        variant === "featured" && "text-white/60",
+        variant === "featured" && "text-muted-foreground dark:opacity-70",
         variant === "accent" && "text-white/70"
       )}>
         {label}
@@ -58,13 +58,15 @@ export const MetricCard = ({
         <Tooltip>
           <TooltipTrigger asChild>
             <Info size={14} className={cn(
-              "cursor-help",
-              variant === "featured" || variant === "accent" 
-                ? "text-white/40" 
-                : "text-muted-foreground"
+              "cursor-help transition-opacity",
+              variant === "featured" 
+                ? "text-muted-foreground opacity-50 hover:opacity-80" 
+                : variant === "accent"
+                  ? "text-white/40 hover:text-white/70"
+                  : "text-muted-foreground opacity-50 hover:opacity-80"
             )} />
           </TooltipTrigger>
-          <TooltipContent className="max-w-xs">
+          <TooltipContent className="max-w-xs bg-card border-border shadow-lg">
             <p className="text-xs">{tooltip}</p>
           </TooltipContent>
         </Tooltip>
@@ -79,47 +81,47 @@ export const MetricCard = ({
         style={{ animationDelay: `${delay}ms` }}
       >
         <div className="relative z-10">
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex items-start justify-between mb-5">
             <LabelWithTooltip />
             {icon && (
-              <span className="p-2.5 rounded-xl bg-white/10">
+              <span className="p-2.5 rounded-xl bg-primary/15 dark:bg-white/10 text-primary dark:text-white ring-1 ring-primary/20 dark:ring-white/10">
                 {icon}
               </span>
             )}
           </div>
 
           <div className="space-y-3">
-            <p className="text-metric-lg text-white tabular-nums">
+            <p className="text-metric-lg tabular-nums text-foreground">
               {value}
             </p>
 
             {badge && (
-              <Badge variant={badge.variant} className="text-xs">
+              <Badge variant={badge.variant} className="text-[10px] font-bold">
                 {badge.label}
               </Badge>
             )}
 
             {subtext && (
-              <p className="text-caption text-white/50">
+              <p className="text-caption opacity-60">
                 {subtext}
               </p>
             )}
 
             {trend && (
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2.5 pt-1">
                 <span className={cn(
                   "trend-badge",
                   isPositive && "trend-badge-positive",
                   isNegative && "trend-badge-negative",
-                  isNeutral && "bg-white/20 text-white"
+                  isNeutral && "bg-muted dark:bg-white/15 text-muted-foreground dark:text-white/70"
                 )}>
-                  {isPositive && <TrendingUp size={14} />}
-                  {isNegative && <TrendingDown size={14} />}
-                  {isNeutral && <Minus size={14} />}
+                  {isPositive && <TrendingUp size={13} strokeWidth={2.5} />}
+                  {isNegative && <TrendingDown size={13} strokeWidth={2.5} />}
+                  {isNeutral && <Minus size={13} strokeWidth={2.5} />}
                   {isPositive && "+"}
                   {trend.value}%
                 </span>
-                <span className="text-caption text-white/60">
+                <span className="text-caption opacity-60">
                   {trend.label}
                 </span>
               </div>
@@ -136,48 +138,50 @@ export const MetricCard = ({
         className="card-accent group animate-fade-in-up"
         style={{ animationDelay: `${delay}ms` }}
       >
-        <div className="flex items-start justify-between mb-4">
-          <LabelWithTooltip />
-          {icon && (
-            <span className="p-2.5 rounded-xl bg-white/20">
-              {icon}
-            </span>
-          )}
-        </div>
+        <div className="relative z-10">
+          <div className="flex items-start justify-between mb-4">
+            <LabelWithTooltip />
+            {icon && (
+              <span className="p-2.5 rounded-xl bg-white/20 ring-1 ring-white/10">
+                {icon}
+              </span>
+            )}
+          </div>
 
-        <div className="space-y-2">
-          <p className="text-metric text-white tabular-nums">
-            {value}
-          </p>
-
-          {badge && (
-            <Badge variant={badge.variant} className="text-xs">
-              {badge.label}
-            </Badge>
-          )}
-
-          {subtext && (
-            <p className="text-xs text-white/60">
-              {subtext}
+          <div className="space-y-2.5">
+            <p className="text-metric text-white tabular-nums">
+              {value}
             </p>
-          )}
 
-          {trend && (
-            <div className="flex items-center gap-2">
-              <span className={cn(
-                "trend-badge bg-white/20 text-white"
-              )}>
-                {isPositive && <TrendingUp size={14} />}
-                {isNegative && <TrendingDown size={14} />}
-                {isNeutral && <Minus size={14} />}
-                {isPositive && "+"}
-                {trend.value}%
-              </span>
-              <span className="text-sm text-white/70">
-                {trend.label}
-              </span>
-            </div>
-          )}
+            {badge && (
+              <Badge variant={badge.variant} className="text-[10px] font-bold bg-white/20 text-white border-white/20">
+                {badge.label}
+              </Badge>
+            )}
+
+            {subtext && (
+              <p className="text-xs text-white/60">
+                {subtext}
+              </p>
+            )}
+
+            {trend && (
+              <div className="flex items-center gap-2.5 pt-1">
+                <span className={cn(
+                  "trend-badge bg-white/20 text-white"
+                )}>
+                  {isPositive && <TrendingUp size={13} strokeWidth={2.5} />}
+                  {isNegative && <TrendingDown size={13} strokeWidth={2.5} />}
+                  {isNeutral && <Minus size={13} strokeWidth={2.5} />}
+                  {isPositive && "+"}
+                  {trend.value}%
+                </span>
+                <span className="text-sm text-white/60">
+                  {trend.label}
+                </span>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -191,19 +195,19 @@ export const MetricCard = ({
       <div className="flex items-start justify-between mb-4">
         <LabelWithTooltip />
         {icon && (
-          <span className="p-2.5 rounded-xl bg-primary/10 text-primary">
+          <span className="p-2.5 rounded-xl bg-primary/10 text-primary ring-1 ring-primary/10 transition-all duration-200 group-hover:ring-primary/20 group-hover:bg-primary/15">
             {icon}
           </span>
         )}
       </div>
 
-      <div className="space-y-2">
+      <div className="space-y-2.5">
         <p className="text-metric tabular-nums text-foreground">
           {value}
         </p>
 
         {badge && (
-          <Badge variant={badge.variant} className="text-xs">
+          <Badge variant={badge.variant} className="text-[10px] font-bold">
             {badge.label}
           </Badge>
         )}
@@ -211,7 +215,7 @@ export const MetricCard = ({
         {alert && (
           <div className="flex items-center gap-1.5 text-warning">
             {alert.icon}
-            <span className="text-xs font-medium">{alert.text}</span>
+            <span className="text-xs font-semibold">{alert.text}</span>
           </div>
         )}
 
@@ -222,16 +226,16 @@ export const MetricCard = ({
         )}
 
         {trend && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2.5 pt-1">
             <span className={cn(
               "trend-badge",
               isPositive && "trend-badge-positive",
               isNegative && "trend-badge-negative",
               isNeutral && "bg-muted text-muted-foreground"
             )}>
-              {isPositive && <TrendingUp size={14} />}
-              {isNegative && <TrendingDown size={14} />}
-              {isNeutral && <Minus size={14} />}
+              {isPositive && <TrendingUp size={13} strokeWidth={2.5} />}
+              {isNegative && <TrendingDown size={13} strokeWidth={2.5} />}
+              {isNeutral && <Minus size={13} strokeWidth={2.5} />}
               {isPositive && "+"}
               {trend.value}%
             </span>
@@ -244,3 +248,5 @@ export const MetricCard = ({
     </div>
   );
 };
+
+// Reposicionamento visual aplicado: identidade própria do Dash 26 estabelecida

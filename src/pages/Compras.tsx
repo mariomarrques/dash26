@@ -82,8 +82,9 @@ export default function Compras() {
   const [isVendaModalOpen, setIsVendaModalOpen] = useState(false);
 
   const hasActiveFilter = statusFilter !== "all" || sourceFilter !== "all";
+  const isUserReady = !!user?.id;
 
-  const { data: purchases, isLoading, error } = useQuery({
+  const { data: purchases, isLoading: purchasesLoading, isFetching, error } = useQuery({
     queryKey: ["purchase_orders", user?.id, primaryStartDate, primaryEndDate, statusFilter, sourceFilter],
     queryFn: async () => {
       if (!user) return [];
@@ -111,8 +112,11 @@ export default function Compras() {
       if (error) throw error;
       return data as PurchaseOrder[];
     },
-    enabled: !!user,
+    enabled: isUserReady,
   });
+  
+  // isLoading só é true quando está carregando E o usuário está pronto
+  const isLoading = isUserReady ? (purchasesLoading || isFetching) : false;
 
   const calculateTotal = (purchase: PurchaseOrder) => {
     let itemsTotal = 0;
@@ -305,7 +309,7 @@ export default function Compras() {
                           purchaseItems={purchase.purchase_items}
                         />
                         {purchase.source === "china" && 
-                         purchase.shipping_mode === "offline" && 
+                         (purchase.shipping_mode === "offline" || purchase.shipping_mode === "cssbuy") && 
                          purchase.arrival_tax_brl === null && (
                           <Tooltip>
                             <TooltipTrigger>

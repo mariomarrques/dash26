@@ -7,7 +7,7 @@ interface DashboardLayoutProps {
   children: React.ReactNode;
   title: string;
   subtitle?: string;
-  hidePeriodFilter?: boolean; // For pages that don't need period filter (like settings)
+  hidePeriodFilter?: boolean;
 }
 
 export const DashboardLayout = ({ 
@@ -31,7 +31,15 @@ export const DashboardLayout = ({
         onClose={() => setIsMobileMenuOpen(false)} 
       />
       
-      <div className="flex-1 flex flex-col overflow-hidden">
+      <div className="flex-1 flex flex-col overflow-hidden relative">
+        {/* Ambient glow effect */}
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-full max-w-3xl h-80 pointer-events-none z-0 opacity-60">
+          <div 
+            className="w-full h-full"
+            style={{ background: 'var(--gradient-glow)' }}
+          />
+        </div>
+        
         <Header 
           title={title} 
           subtitle={subtitle}
@@ -39,10 +47,12 @@ export const DashboardLayout = ({
           hidePeriodFilter={hidePeriodFilter}
         />
         
-        <main className="flex-1 overflow-auto p-4 md:p-8">
+        <main className="flex-1 overflow-auto p-4 md:p-8 relative z-10">
           {children}
         </main>
       </div>
     </div>
   );
 };
+
+// Reposicionamento visual aplicado: identidade própria do Dash 26 estabelecida

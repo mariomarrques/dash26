@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useState, useRef, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, useRef, ReactNode, useCallback } from 'react';
 import { User, Session } from '@supabase/supabase-js';
 import { supabase } from '@/integrations/supabase/client';
 
@@ -94,13 +94,25 @@ const seedAccountData = async (userId: string) => {
   }
 };
 
+// Profile type
+interface Profile {
+  id: string;
+  name: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 interface AuthContextType {
   user: User | null;
   session: Session | null;
+  profile: Profile | null;
+  profileLoaded: boolean; // Indica se tentamos carregar o profile
   loading: boolean;
-  signUp: (email: string, password: string, name?: string) => Promise<{ error: Error | null }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: Error | null }>;
   signIn: (email: string, password: string) => Promise<{ error: Error | null }>;
   signOut: () => Promise<void>;
+  updateProfile: (name: string) => Promise<{ error: Error | null }>;
+  refetchProfile: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -108,47 +120,169 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
+  const [profile, setProfile] = useState<Profile | null>(null);
+  const [profileLoaded, setProfileLoaded] = useState(false);
   const [loading, setLoading] = useState(true);
   const hasSeeded = useRef(false);
+  const initializationComplete = useRef(false);
+
+  // Função para buscar profile (não bloqueia se falhar)
+  const fetchProfile = async (userId: string): Promise<Profile | null> => {
+    try {
+      const { data, error } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      setProfileLoaded(true);
+      
+      if (error) {
+        // Profile não encontrado - não é erro crítico
+        console.log('Profile not found, will use defaults');
+        return null;
+      }
+
+      return data;
+    } catch (error) {
+      console.error('Error fetching profile:', error);
+      setProfileLoaded(true);
+      return null;
+    }
+  };
+
+  // Refetch profile (exposta para uso externo)
+  const refetchProfile = useCallback(async () => {
+    if (user?.id) {
+      const profileData = await fetchProfile(user.id);
+      setProfile(profileData);
+    }
+  }, [user?.id]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setSession(session);
-        setUser(session?.user ?? null);
+    let mounted = true;
+    let authSubscription: { unsubscribe: () => void } | null = null;
+    
+    // Timeout de segurança: nunca ficar em loading por mais de 10 segundos
+    const safetyTimeout = setTimeout(() => {
+      if (loading && !initializationComplete.current && mounted) {
+        console.warn('Auth initialization timeout - forcing loading to false');
         setLoading(false);
+        initializationComplete.current = true;
+      }
+    }, 10000);
+
+    const initializeAuth = async () => {
+      try {
+        // Buscar sessão inicial
+        const { data: { session: initialSession }, error } = await supabase.auth.getSession();
         
-        // Run seed after authentication (deferred to avoid deadlock)
-        if (session?.user && !hasSeeded.current) {
-          hasSeeded.current = true;
-          setTimeout(() => {
-            seedAccountData(session.user.id);
-          }, 0);
+        if (!mounted) return; // Componente desmontado
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          setLoading(false);
+          initializationComplete.current = true;
+          return;
+        }
+
+        setSession(initialSession);
+        setUser(initialSession?.user ?? null);
+
+        if (initialSession?.user) {
+          // Buscar profile de forma não-bloqueante
+          const profileData = await fetchProfile(initialSession.user.id);
+          if (mounted) {
+            setProfile(profileData);
+          }
+
+          // Seed account data (não bloqueia)
+          if (!hasSeeded.current && mounted) {
+            hasSeeded.current = true;
+            seedAccountData(initialSession.user.id).catch(console.error);
+          }
+        }
+
+        if (mounted) {
+          setLoading(false);
+          initializationComplete.current = true;
+        }
+      } catch (error) {
+        console.error('Auth initialization error:', error);
+        if (mounted) {
+          setLoading(false);
+          initializationComplete.current = true;
         }
       }
-    );
+    };
 
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setSession(session);
-      setUser(session?.user ?? null);
-      setLoading(false);
+    // Listener para mudanças de auth - só ativar APÓS inicialização
+    const setupAuthListener = () => {
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        async (event, newSession) => {
+          if (!mounted) return;
+          
+          // Ignorar eventos durante inicialização
+          if (!initializationComplete.current) {
+            console.log('Ignoring auth event during initialization:', event);
+            return;
+          }
+
+          console.log('Auth event:', event);
+
+          // Atualizar estado imediatamente
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+
+          if (newSession?.user) {
+            // Buscar profile
+            const profileData = await fetchProfile(newSession.user.id);
+            if (mounted) {
+              setProfile(profileData);
+            }
+
+            // Seed se necessário
+            if (!hasSeeded.current && mounted) {
+              hasSeeded.current = true;
+              seedAccountData(newSession.user.id).catch(console.error);
+            }
+          } else {
+            if (mounted) {
+              setProfile(null);
+              setProfileLoaded(false);
+            }
+          }
+
+          // Garantir que loading está false após qualquer mudança de estado
+          if (mounted && initializationComplete.current) {
+            setLoading(false);
+          }
+        }
+      );
       
-      // Also seed on initial session check
-      if (session?.user && !hasSeeded.current) {
-        hasSeeded.current = true;
-        setTimeout(() => {
-          seedAccountData(session.user.id);
-        }, 0);
+      return subscription;
+    };
+
+    // Inicializar primeiro, listener depois
+    initializeAuth().then(() => {
+      if (mounted) {
+        authSubscription = setupAuthListener();
       }
     });
 
-    return () => subscription.unsubscribe();
-  }, []);
+    return () => {
+      mounted = false;
+      clearTimeout(safetyTimeout);
+      if (authSubscription) {
+        authSubscription.unsubscribe();
+      }
+    };
+  }, []); // Array vazio - rodar apenas uma vez
 
-  const signUp = async (email: string, password: string, name?: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     const redirectUrl = `${window.location.origin}/`;
     
-    const { error } = await supabase.auth.signUp({
+    const { data, error } = await supabase.auth.signUp({
       email,
       password,
       options: {
@@ -156,6 +290,22 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         data: { name }
       }
     });
+
+    // Se signup bem-sucedido e temos usuário, criar profile
+    if (!error && data.user) {
+      try {
+        await supabase
+          .from('profiles')
+          .upsert({
+            id: data.user.id,
+            name: name,
+            updated_at: new Date().toISOString()
+          });
+      } catch (profileError) {
+        console.error('Error creating profile:', profileError);
+      }
+    }
+
     return { error: error as Error | null };
   };
 
@@ -168,12 +318,64 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const signOut = async () => {
-    hasSeeded.current = false; // Reset on signout
-    await supabase.auth.signOut();
+    try {
+      // Limpar estados locais primeiro
+      hasSeeded.current = false;
+      setProfile(null);
+      setProfileLoaded(false);
+      setUser(null);
+      setSession(null);
+      
+      // Chamar signOut do Supabase
+      await supabase.auth.signOut();
+    } catch (error) {
+      console.error('Error signing out:', error);
+      // Mesmo com erro, garantir que o estado local está limpo
+      setProfile(null);
+      setProfileLoaded(false);
+      setUser(null);
+      setSession(null);
+    }
+  };
+
+  // Atualizar nome do perfil
+  const updateProfile = async (name: string) => {
+    if (!user) {
+      return { error: new Error('Usuário não autenticado') };
+    }
+
+    try {
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user.id,
+          name,
+          updated_at: new Date().toISOString()
+        });
+
+      if (!error) {
+        setProfile(prev => prev ? { ...prev, name } : { id: user.id, name, created_at: new Date().toISOString(), updated_at: new Date().toISOString() });
+      }
+
+      return { error: error as Error | null };
+    } catch (error) {
+      return { error: error as Error };
+    }
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, loading, signUp, signIn, signOut }}>
+    <AuthContext.Provider value={{ 
+      user, 
+      session, 
+      profile,
+      profileLoaded,
+      loading, 
+      signUp, 
+      signIn, 
+      signOut, 
+      updateProfile,
+      refetchProfile 
+    }}>
       {children}
     </AuthContext.Provider>
   );
@@ -186,3 +388,5 @@ export const useAuth = () => {
   }
   return context;
 };
+
+// Varredura completa concluída: estabilidade restaurada, seed demo corrigido e painel55 eliminado do Dash 26

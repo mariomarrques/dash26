@@ -52,7 +52,7 @@ export function PurchaseCardMobile({ purchase, onEdit, onClick }: PurchaseCardMo
   };
 
   const hasPendingTax = purchase.source === "china" && 
-    purchase.shipping_mode === "offline" && 
+    (purchase.shipping_mode === "offline" || purchase.shipping_mode === "cssbuy") && 
     purchase.arrival_tax_brl === null;
 
   const handleCardClick = (e: React.MouseEvent) => {

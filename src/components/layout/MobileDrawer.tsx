@@ -11,7 +11,7 @@ import {
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useEffect } from "react";
-import logoPainel55 from "@/assets/logo-painel55.png";
+import { Logo } from "@/components/ui/logo";
 
 interface MobileDrawerProps {
   isOpen: boolean;
@@ -35,15 +35,25 @@ const NavItem = ({ icon, label, to, onNavigate }: NavItemProps) => {
       to={to}
       onClick={onNavigate}
       className={cn(
-        "w-full flex items-center gap-4 px-4 py-4 rounded-xl transition-all duration-200",
-        "text-sidebar-foreground/70 hover:text-white",
+        "group relative w-full flex items-center gap-4 px-4 py-3.5 rounded-xl transition-all duration-200",
+        "text-sidebar-foreground hover:text-sidebar-accent-foreground",
         isActive 
-          ? "bg-gradient-primary text-white shadow-glow-primary font-semibold" 
-          : "hover:bg-white/10"
+          ? "bg-gradient-primary text-white font-semibold" 
+          : "hover:bg-sidebar-accent"
       )}
     >
-      <span className="flex-shrink-0">{icon}</span>
-      <span className="text-base font-medium">{label}</span>
+      {/* Active indicator */}
+      {isActive && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full" />
+      )}
+      
+      <span className={cn(
+        "flex-shrink-0 transition-transform duration-200",
+        !isActive && "group-hover:scale-110"
+      )}>
+        {icon}
+      </span>
+      <span className="text-[15px] font-medium">{label}</span>
     </NavLink>
   );
 };
@@ -92,26 +102,19 @@ export const MobileDrawer = ({ isOpen, onClose }: MobileDrawerProps) => {
       <aside 
         className={cn(
           "fixed top-0 left-0 h-full w-[80%] max-w-[320px] z-50 flex flex-col transition-transform duration-300 ease-out md:hidden",
+          "bg-sidebar border-r border-sidebar-border",
           isOpen ? "translate-x-0" : "-translate-x-full"
         )}
-        style={{ background: "var(--gradient-dark)" }}
       >
         {/* Header */}
-        <div className="h-16 flex items-center justify-between border-b border-white/10 px-4">
-          <NavLink to="/" onClick={onClose} className="flex items-center gap-3">
-            <img 
-              src={logoPainel55} 
-              alt="Painel 55" 
-              className="w-10 h-10 rounded-xl flex-shrink-0"
-            />
-            <span className="text-white font-bold text-xl tracking-tight">
-              Painel 55
-            </span>
+        <div className="h-16 flex items-center justify-between border-b border-sidebar-border px-4">
+          <NavLink to="/" onClick={onClose} className="flex items-center">
+            <Logo size="md" variant="full" forceDarkText />
           </NavLink>
           
           <button
             onClick={onClose}
-            className="p-2 text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+            className="p-2 text-sidebar-foreground/50 hover:text-sidebar-foreground transition-colors rounded-lg hover:bg-sidebar-accent"
             aria-label="Fechar menu"
           >
             <X size={24} />
@@ -132,7 +135,7 @@ export const MobileDrawer = ({ isOpen, onClose }: MobileDrawerProps) => {
         </nav>
 
         {/* Bottom section */}
-        <div className="p-4 border-t border-white/10">
+        <div className="p-4 border-t border-sidebar-border">
           <NavItem
             icon={<Settings size={22} />}
             label="Configurações"
@@ -144,3 +147,5 @@ export const MobileDrawer = ({ isOpen, onClose }: MobileDrawerProps) => {
     </>
   );
 };
+
+// Reposicionamento visual aplicado: identidade própria do Dash 26 estabelecida

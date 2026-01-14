@@ -141,7 +141,9 @@ const Vendas = () => {
     enabled: !!user?.id,
   });
 
-  const { data: sales, isLoading, refetch } = useQuery({
+  const isUserReady = !!user?.id;
+  
+  const { data: sales, isLoading: salesLoading, isFetching, refetch } = useQuery({
     queryKey: ['sales', user?.id, primaryStartDate, primaryEndDate, channelFilter, paymentFilter, typeFilter],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -186,8 +188,11 @@ const Vendas = () => {
       if (error) throw error;
       return (data || []) as SaleData[];
     },
-    enabled: !!user?.id,
+    enabled: isUserReady,
   });
+  
+  // isLoading só é true quando está carregando E o usuário está pronto
+  const isLoading = isUserReady ? (salesLoading || isFetching) : false;
 
   const handleViewSale = (saleId: string) => {
     setViewingSaleId(saleId);

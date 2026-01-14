@@ -25,8 +25,8 @@ const formatCurrency = (value: number) => {
 };
 
 const getProfitColor = (profit: number) => {
-  if (profit > 0) return "text-emerald-600 dark:text-emerald-400";
-  if (profit < 0) return "text-red-500 dark:text-red-400";
+  if (profit > 0) return "text-metric-positive";
+  if (profit < 0) return "text-metric-negative";
   return "text-muted-foreground";
 };
 
@@ -43,10 +43,10 @@ export function TeamProfitRanking({ data, isLoading }: TeamProfitRankingProps) {
   
   if (isLoading) {
     return (
-      <div className="card-metric p-4 md:p-5 animate-fade-in">
+      <div className="card-metric animate-fade-in">
         <div className="flex items-center gap-2 mb-4">
-          <Skeleton className="h-5 w-5 rounded" />
-          <Skeleton className="h-5 w-40 rounded" />
+          <Skeleton className="h-4 w-4 rounded" />
+          <Skeleton className="h-4 w-40 rounded" />
         </div>
         <div className="space-y-3">
           {[1, 2, 3].map((i) => (
@@ -62,10 +62,10 @@ export function TeamProfitRanking({ data, isLoading }: TeamProfitRankingProps) {
 
   if (!data || data.length === 0) {
     return (
-      <div className="card-metric p-4 md:p-5 animate-fade-in-up">
+      <div className="card-metric animate-fade-in-up">
         <div className="flex items-center gap-2 mb-3">
-          <Trophy size={18} className="text-primary" />
-          <h3 className="font-semibold text-foreground">Times mais lucrativos</h3>
+          <Trophy size={16} className="text-primary" />
+          <h3 className="text-label text-foreground tracking-[0.08em]">Times mais lucrativos</h3>
         </div>
         <p className="text-sm text-muted-foreground">
           Nenhuma venda no período
@@ -79,11 +79,11 @@ export function TeamProfitRanking({ data, isLoading }: TeamProfitRankingProps) {
 
   return (
     <>
-      <div className="card-metric p-4 md:p-5 animate-fade-in-up">
+      <div className="card-metric animate-fade-in-up">
         <div className="flex items-center justify-between mb-4">
           <div className="flex items-center gap-2">
-            <Trophy size={18} className="text-primary" />
-            <h3 className="font-semibold text-foreground">Times mais lucrativos</h3>
+            <Trophy size={16} className="text-primary" />
+            <h3 className="text-label text-foreground tracking-[0.08em]">Times mais lucrativos</h3>
           </div>
           {data.length > 3 && (
             <Button

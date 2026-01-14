@@ -65,9 +65,11 @@ const Estoque = () => {
     };
   }, [stockAudit]);
 
+  const isUserReady = !!user?.id;
+  
   // Query stock from stock_movements ONLY (source of truth for quantity)
   // and inventory_lots for cost (source of truth for FIFO cost)
-  const { data: stockItems = [], isLoading } = useQuery({
+  const { data: stockItems = [], isLoading: stockLoading, isFetching } = useQuery({
     queryKey: ['stock', user?.id, showZeroStock],
     queryFn: async () => {
       if (!user?.id) return [];
@@ -177,8 +179,11 @@ const Estoque = () => {
         showZeroStock ? true : item.quantity > 0
       );
     },
-    enabled: !!user?.id
+    enabled: isUserReady
   });
+  
+  // isLoading só é true quando está carregando E o usuário está pronto
+  const isLoading = isUserReady ? (stockLoading || isFetching) : false;
 
   // Query items "on the way" (purchase orders not yet arrived)
   const { data: incomingItems = [] } = useQuery({
@@ -233,7 +238,7 @@ const Estoque = () => {
 
       return Array.from(incomingMap.values());
     },
-    enabled: !!user?.id
+    enabled: isUserReady
   });
 
   const filteredItems = stockItems.filter(item => {

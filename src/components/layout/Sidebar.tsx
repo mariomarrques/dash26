@@ -4,8 +4,6 @@ import {
   Package, 
   TrendingUp, 
   Settings,
-  ChevronLeft,
-  ChevronRight,
   Receipt,
   PieChart,
   PanelLeftClose,
@@ -21,11 +19,11 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
-import logoPainel55 from "@/assets/logo-painel55.png";
+import { Logo } from "@/components/ui/logo";
 
 const ADMIN_EMAIL = "sacmariomarques@gmail.com";
 
-const SIDEBAR_STORAGE_KEY = "painel55-sidebar-collapsed";
+const SIDEBAR_STORAGE_KEY = "dash26-sidebar-collapsed";
 
 // Pages that should auto-collapse the sidebar for better focus
 const FLOW_PAGES = ["/vendas", "/compras", "/estoque", "/custos", "/margens"];
@@ -46,16 +44,29 @@ const NavItem = ({ icon, label, to, collapsed }: NavItemProps) => {
     <NavLink
       to={to}
       className={cn(
-        "w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-200",
-        "text-sidebar-foreground/70 hover:text-white",
+        "group relative w-full flex items-center gap-3 px-3.5 py-2.5 rounded-xl transition-all duration-200",
+        "text-sidebar-foreground",
         isActive 
-          ? "bg-gradient-primary text-white shadow-glow-primary font-semibold" 
-          : "hover:bg-white/10 hover:translate-x-1",
-        collapsed && "justify-center px-3"
+          ? "bg-gradient-primary text-white font-semibold" 
+          : "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+        collapsed && "justify-center px-0"
       )}
     >
-      <span className="flex-shrink-0">{icon}</span>
-      {!collapsed && <span className="text-sm">{label}</span>}
+      {/* Active indicator */}
+      {isActive && (
+        <span className="absolute left-0 top-1/2 -translate-y-1/2 w-1 h-6 bg-white/30 rounded-r-full" />
+      )}
+      
+      <span className={cn(
+        "flex-shrink-0 transition-transform duration-200",
+        !isActive && "group-hover:scale-110"
+      )}>
+        {icon}
+      </span>
+      
+      {!collapsed && (
+        <span className="text-sm font-medium">{label}</span>
+      )}
     </NavLink>
   );
 
@@ -65,7 +76,10 @@ const NavItem = ({ icon, label, to, collapsed }: NavItemProps) => {
         <TooltipTrigger asChild>
           {linkContent}
         </TooltipTrigger>
-        <TooltipContent side="right" className="font-medium">
+        <TooltipContent 
+          side="right" 
+          className="font-medium bg-card border-border shadow-lg"
+        >
           {label}
         </TooltipContent>
       </Tooltip>
@@ -120,27 +134,22 @@ export const Sidebar = () => {
   return (
     <aside 
       className={cn(
-        "h-screen flex flex-col transition-all duration-300 border-r border-sidebar-border flex-shrink-0",
-        collapsed ? "w-[72px]" : "w-[280px]"
+        "h-screen flex flex-col transition-all duration-300 flex-shrink-0",
+        "bg-sidebar border-r border-sidebar-border",
+        collapsed ? "w-[68px]" : "w-[260px]"
       )}
-      style={{ background: "var(--gradient-dark)" }}
     >
-      {/* Header with Logo and Collapse Button */}
+      {/* Header with Logo */}
       <div className={cn(
-        "h-16 flex items-center justify-between border-b border-white/10 px-4",
-        collapsed && "justify-center px-2"
+        "h-16 flex items-center justify-between border-b border-sidebar-border",
+        collapsed ? "px-2 justify-center" : "px-4"
       )}>
-        <NavLink to="/" className="flex items-center gap-3">
-          <img 
-            src={logoPainel55} 
-            alt="Painel 55" 
-            className="w-10 h-10 rounded-xl flex-shrink-0"
+        <NavLink to="/" className="flex items-center">
+          <Logo 
+            size={collapsed ? "sm" : "md"} 
+            variant={collapsed ? "icon" : "full"}
+            forceDarkText
           />
-          {!collapsed && (
-            <span className="text-white font-bold text-xl tracking-tight">
-              Painel 55
-            </span>
-          )}
         </NavLink>
         
         {!collapsed && (
@@ -148,41 +157,53 @@ export const Sidebar = () => {
             <TooltipTrigger asChild>
               <button
                 onClick={toggleCollapsed}
-                className="p-2 text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/10"
+                className="p-2 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-all duration-200 rounded-lg hover:bg-sidebar-accent"
                 aria-label="Recolher menu"
               >
-                <PanelLeftClose size={20} />
+                <PanelLeftClose size={18} strokeWidth={1.5} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side="right" className="bg-card border-border">
               Recolher menu
             </TooltipContent>
           </Tooltip>
         )}
       </div>
 
-      {/* Expand button when collapsed - in header area */}
+      {/* Expand button when collapsed */}
       {collapsed && (
-        <div className="px-2 py-3 border-b border-white/10">
+        <div className="px-2 py-2.5 border-b border-sidebar-border">
           <Tooltip delayDuration={0}>
             <TooltipTrigger asChild>
               <button
                 onClick={toggleCollapsed}
-                className="w-full p-2 text-white/50 hover:text-white transition-colors rounded-lg hover:bg-white/10 flex items-center justify-center"
+                className="w-full p-2 text-sidebar-foreground/40 hover:text-sidebar-foreground transition-all duration-200 rounded-lg hover:bg-sidebar-accent flex items-center justify-center"
                 aria-label="Expandir menu"
               >
-                <PanelLeft size={20} />
+                <PanelLeft size={18} strokeWidth={1.5} />
               </button>
             </TooltipTrigger>
-            <TooltipContent side="right">
+            <TooltipContent side="right" className="bg-card border-border">
               Expandir menu
             </TooltipContent>
           </Tooltip>
         </div>
       )}
 
+      {/* Section Label - only when expanded */}
+      {!collapsed && (
+        <div className="px-5 py-3">
+          <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40">
+            Menu Principal
+          </span>
+        </div>
+      )}
+
       {/* Navigation */}
-      <nav className="flex-1 p-4 space-y-2">
+      <nav className={cn(
+        "flex-1 space-y-1",
+        collapsed ? "px-2 py-2" : "px-3"
+      )}>
         {navItems.map((item) => (
           <NavItem
             key={item.id}
@@ -194,8 +215,19 @@ export const Sidebar = () => {
         ))}
       </nav>
 
-      {/* Bottom section - Settings and Admin */}
-      <div className="p-4 border-t border-white/10 space-y-2">
+      {/* Bottom section */}
+      <div className={cn(
+        "border-t border-sidebar-border space-y-1",
+        collapsed ? "px-2 py-3" : "px-3 py-4"
+      )}>
+        {!collapsed && (
+          <div className="px-2 pb-2">
+            <span className="text-[10px] font-bold uppercase tracking-[0.15em] text-sidebar-foreground/40">
+              Sistema
+            </span>
+          </div>
+        )}
+        
         {/* Item de auditoria - SOMENTE para admin */}
         {isAdmin && (
           <NavItem
@@ -215,3 +247,5 @@ export const Sidebar = () => {
     </aside>
   );
 };
+
+// Reposicionamento visual aplicado: identidade própria do Dash 26 estabelecida

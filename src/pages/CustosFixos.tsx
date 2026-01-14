@@ -108,6 +108,10 @@ const CustosFixos = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fixed-costs'] });
+      // Invalidar dashboard para atualizar métricas (custos afetam lucro)
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['secondary-insights'] });
+      queryClient.invalidateQueries({ queryKey: ['team-profitability'] });
       toast({ title: "Custo fixo cadastrado com sucesso" });
       setIsModalOpen(false);
       resetForm();
@@ -132,6 +136,10 @@ const CustosFixos = () => {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['fixed-costs'] });
+      // Invalidar dashboard para atualizar métricas (custos afetam lucro)
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['secondary-insights'] });
+      queryClient.invalidateQueries({ queryKey: ['team-profitability'] });
       toast({ title: "Custo fixo removido" });
       setDeleteId(null);
     },

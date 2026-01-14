@@ -293,23 +293,51 @@ const AuditoriaEstoque = () => {
                     )}
 
                     {seedResult.stats && (
-                      <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
-                        <div className="bg-background/50 rounded p-2 text-center">
-                          <p className="text-muted-foreground">Fornecedores</p>
-                          <p className="font-bold text-foreground">{seedResult.stats.suppliers}</p>
+                      <div className="space-y-3">
+                        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                          <div className="bg-background/50 rounded p-2 text-center">
+                            <p className="text-muted-foreground">Fornecedores</p>
+                            <p className="font-bold text-foreground">{seedResult.stats.suppliers}</p>
+                          </div>
+                          <div className="bg-background/50 rounded p-2 text-center">
+                            <p className="text-muted-foreground">Produtos</p>
+                            <p className="font-bold text-foreground">{seedResult.stats.products}</p>
+                          </div>
+                          <div className="bg-background/50 rounded p-2 text-center">
+                            <p className="text-muted-foreground">Compras</p>
+                            <p className="font-bold text-foreground">{seedResult.stats.purchaseOrders}</p>
+                          </div>
+                          <div className="bg-background/50 rounded p-2 text-center">
+                            <p className="text-muted-foreground">Vendas</p>
+                            <p className="font-bold text-foreground">{seedResult.stats.sales}</p>
+                          </div>
                         </div>
-                        <div className="bg-background/50 rounded p-2 text-center">
-                          <p className="text-muted-foreground">Produtos</p>
-                          <p className="font-bold text-foreground">{seedResult.stats.products}</p>
-                        </div>
-                        <div className="bg-background/50 rounded p-2 text-center">
-                          <p className="text-muted-foreground">Compras</p>
-                          <p className="font-bold text-foreground">{seedResult.stats.purchaseOrders}</p>
-                        </div>
-                        <div className="bg-background/50 rounded p-2 text-center">
-                          <p className="text-muted-foreground">Vendas</p>
-                          <p className="font-bold text-foreground">{seedResult.stats.sales}</p>
-                        </div>
+                        
+                        {/* Métricas financeiras */}
+                        {seedResult.stats.revenue !== undefined && (
+                          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-sm">
+                            <div className="bg-primary/10 rounded p-2 text-center">
+                              <p className="text-muted-foreground">Faturamento</p>
+                              <p className="font-bold text-primary">
+                                R$ {seedResult.stats.revenue?.toLocaleString('pt-BR')}
+                              </p>
+                            </div>
+                            <div className="bg-green-500/10 rounded p-2 text-center">
+                              <p className="text-muted-foreground">Lucro</p>
+                              <p className="font-bold text-green-400">
+                                R$ {seedResult.stats.profit?.toLocaleString('pt-BR')}
+                              </p>
+                            </div>
+                            <div className="bg-background/50 rounded p-2 text-center">
+                              <p className="text-muted-foreground">Margem Média</p>
+                              <p className="font-bold text-foreground">{seedResult.stats.avgMargin}%</p>
+                            </div>
+                            <div className="bg-background/50 rounded p-2 text-center">
+                              <p className="text-muted-foreground">Estoque</p>
+                              <p className="font-bold text-foreground">{seedResult.stats.totalStock} itens</p>
+                            </div>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

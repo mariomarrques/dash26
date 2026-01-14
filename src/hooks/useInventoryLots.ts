@@ -59,10 +59,10 @@ export async function createInventoryLots(
   const extraCosts = purchase.freight_brl + purchase.extra_fees_brl + (purchase.arrival_tax_brl || 0);
   const rateioPerPiece = extraCosts / totalPieces;
 
-  // Check if arrival_tax is pending (offline China orders without tax)
+  // Check if arrival_tax is pending (offline/cssbuy China orders without tax)
   const costPendingTax = 
     purchase.source === "china" && 
-    purchase.shipping_mode === "offline" && 
+    (purchase.shipping_mode === "offline" || purchase.shipping_mode === "cssbuy") && 
     purchase.arrival_tax_brl === null;
 
   const lots = purchase.purchase_items

@@ -1,3 +1,5 @@
+// Sistema de conta demo (seed) refatorado e validado para o Dash 26
+
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2.49.1";
 
@@ -7,108 +9,98 @@ const corsHeaders = {
 };
 
 const ADMIN_EMAIL = "sacmariomarques@gmail.com";
-const DEMO_EMAIL = "demo@painel55.com";
+const DEMO_EMAIL = "demo@dash26.com";
 const DEMO_PASSWORD = "demo123456";
 
-// ========== DATA DEFINITIONS ==========
+// ==========================================
+// CONFIGURAÇÃO DE DADOS DEMO
+// ==========================================
+
+// Período: últimos 6 meses completos
+const DEMO_MONTHS = [
+  { year: 2025, month: 7, salesTarget: 12, purchaseTarget: 3 },
+  { year: 2025, month: 8, salesTarget: 15, purchaseTarget: 2 },
+  { year: 2025, month: 9, salesTarget: 20, purchaseTarget: 3 },
+  { year: 2025, month: 10, salesTarget: 25, purchaseTarget: 3 },
+  { year: 2025, month: 11, salesTarget: 30, purchaseTarget: 2 },
+  { year: 2025, month: 12, salesTarget: 35, purchaseTarget: 3 },
+  { year: 2026, month: 1, salesTarget: 20, purchaseTarget: 2 },
+];
 
 const SUPPLIERS = [
-  { name: "XingSun", type: "nacional" },
-  { name: "Chen", type: "internacional" },
-  { name: "Xiao", type: "internacional" },
-  { name: "Wu Xiaodi", type: "internacional" },
-  { name: "Amy", type: "internacional" },
+  { name: "Fornecedor Nacional XingSun", type: "nacional", costMultiplier: 1.0 },
+  { name: "Chen Imports", type: "internacional", costMultiplier: 0.7 },
+  { name: "Wu Trading", type: "internacional", costMultiplier: 0.65 },
 ];
 
+// Produtos com margens variadas
 const PRODUCTS = [
-  { label: "Cruzeiro 24/25", team: "Cruzeiro", country: "Brasil", season: "24/25" },
-  { label: "Cruzeiro 25/26", team: "Cruzeiro", country: "Brasil", season: "25/26" },
-  { label: "Atlético-MG 24/25", team: "Atlético Mineiro", country: "Brasil", season: "24/25" },
-  { label: "Atlético-MG 25/26", team: "Atlético Mineiro", country: "Brasil", season: "25/26" },
-  { label: "Flamengo 24/25", team: "Flamengo", country: "Brasil", season: "24/25" },
-  { label: "Flamengo 25/26", team: "Flamengo", country: "Brasil", season: "25/26" },
-  { label: "Palmeiras 24/25", team: "Palmeiras", country: "Brasil", season: "24/25" },
-  { label: "Palmeiras 25/26", team: "Palmeiras", country: "Brasil", season: "25/26" },
-  { label: "Real Madrid 25/26", team: "Real Madrid", country: "Espanha", season: "25/26" },
-  { label: "Barcelona 25/26", team: "Barcelona", country: "Espanha", season: "25/26" },
-  { label: "Manchester City 25/26", team: "Manchester City", country: "Inglaterra", season: "25/26" },
-  { label: "PSG 25/26", team: "PSG", country: "França", season: "25/26" },
+  { label: "Camisa Cruzeiro 24/25", team: "Cruzeiro", season: "24/25", baseCost: 75, basePrice: 149, popularity: 10 },
+  { label: "Camisa Atlético-MG 24/25", team: "Atlético Mineiro", season: "24/25", baseCost: 75, basePrice: 149, popularity: 8 },
+  { label: "Camisa Flamengo 24/25", team: "Flamengo", season: "24/25", baseCost: 78, basePrice: 159, popularity: 12 },
+  { label: "Camisa Palmeiras 24/25", team: "Palmeiras", season: "24/25", baseCost: 76, basePrice: 154, popularity: 9 },
+  { label: "Camisa Corinthians 24/25", team: "Corinthians", season: "24/25", baseCost: 77, basePrice: 155, popularity: 8 },
+  { label: "Camisa São Paulo 24/25", team: "São Paulo", season: "24/25", baseCost: 75, basePrice: 149, popularity: 7 },
+  { label: "Camisa Real Madrid 24/25", team: "Real Madrid", season: "24/25", baseCost: 85, basePrice: 179, popularity: 6 },
+  { label: "Camisa Barcelona 24/25", team: "Barcelona", season: "24/25", baseCost: 85, basePrice: 179, popularity: 5 },
+  { label: "Camisa Manchester City 24/25", team: "Manchester City", season: "24/25", baseCost: 88, basePrice: 189, popularity: 4 },
+  { label: "Camisa PSG 24/25", team: "PSG", season: "24/25", baseCost: 82, basePrice: 175, popularity: 5 },
+  { label: "Camisa Seleção Brasil", team: "Brasil", season: "24/25", baseCost: 80, basePrice: 169, popularity: 7 },
+  { label: "Camisa Argentina", team: "Argentina", season: "24/25", baseCost: 82, basePrice: 175, popularity: 4 },
 ];
 
-const UNIFORMS = ["Titular", "Reserva", "Goleiro"];
+const UNIFORMS = ["Titular", "Reserva"];
 const SIZES = ["P", "M", "G", "GG"];
 
-const CUSTOMER_FIRST_NAMES = [
-  "Lucas", "Gabriel", "Matheus", "João", "Pedro", "Rafael", "Gustavo", "Felipe",
-  "Bruno", "Leonardo", "Ana", "Maria", "Julia", "Beatriz", "Larissa", "Amanda",
-  "Camila", "Carolina", "Fernanda", "Isabela", "Mariana", "Letícia", "Thiago",
-  "Diego", "André", "Ricardo", "Rodrigo", "Eduardo", "Daniel", "Vinícius"
-];
-
-const CUSTOMER_LAST_NAMES = [
-  "Silva", "Santos", "Oliveira", "Souza", "Costa", "Pereira", "Ferreira", "Almeida",
-  "Nascimento", "Carvalho", "Rocha", "Lima", "Gomes", "Ribeiro", "Martins", "Araújo",
-  "Barbosa", "Correia", "Mendes", "Cardoso", "Moreira", "Nunes", "Vieira", "Freitas",
-  "Reis", "Moura", "Campos", "Monteiro", "Castro", "Teixeira"
+const CUSTOMER_NAMES = [
+  "Lucas Silva", "Gabriel Santos", "Matheus Oliveira", "João Pedro Costa",
+  "Rafael Pereira", "Gustavo Ferreira", "Felipe Almeida", "Bruno Nascimento",
+  "Ana Carolina Lima", "Maria Julia Gomes", "Beatriz Ribeiro", "Larissa Martins",
+  "Amanda Rocha", "Camila Barbosa", "Fernanda Moreira", "Isabela Nunes",
+  "Thiago Campos", "Diego Monteiro", "André Castro", "Ricardo Teixeira",
+  "Mariana Freitas", "Letícia Reis", "Carolina Moura", "Eduardo Vieira"
 ];
 
 const FIXED_COSTS = [
-  { name: "Sacola Kraft", total_cost_brl: 150, total_units: 100 },
-  { name: "Tag Personalizada", total_cost_brl: 80, total_units: 200 },
-  { name: "Embalagem Premium", total_cost_brl: 200, total_units: 100 },
+  { name: "Sacola Kraft", total_cost_brl: 200, total_units: 150 },
+  { name: "Tag Personalizada", total_cost_brl: 100, total_units: 200 },
+  { name: "Embalagem Premium", total_cost_brl: 250, total_units: 100 },
 ];
 
 const SALES_CHANNELS = [
   { name: "WhatsApp", weight: 50 },
   { name: "Instagram", weight: 35 },
-  { name: "Influencer", weight: 10 },
-  { name: "Loja", weight: 5 },
+  { name: "Loja", weight: 10 },
+  { name: "Influencer", weight: 5 },
 ];
 
 const PAYMENT_METHODS = [
-  { name: "PIX", type: "pix", weight: 60 },
-  { name: "Crédito", type: "credit", weight: 25 },
+  { name: "PIX", type: "pix", weight: 55 },
+  { name: "Crédito", type: "credit", weight: 30 },
   { name: "Débito", type: "debit", weight: 10 },
   { name: "Dinheiro", type: "cash", weight: 5 },
 ];
 
-const PAYMENT_FEES = [
-  { payment_method: "PIX", installments: 1, fee_percent: 0, fee_fixed_brl: 0 },
-  { payment_method: "Débito", installments: 1, fee_percent: 1.37, fee_fixed_brl: 0 },
-  { payment_method: "Dinheiro", installments: 1, fee_percent: 0, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 1, fee_percent: 4.98, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 2, fee_percent: 7.29, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 3, fee_percent: 8.39, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 4, fee_percent: 9.49, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 5, fee_percent: 10.59, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 6, fee_percent: 11.69, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 7, fee_percent: 12.49, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 8, fee_percent: 13.29, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 9, fee_percent: 14.09, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 10, fee_percent: 14.89, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 11, fee_percent: 15.69, fee_fixed_brl: 0 },
-  { payment_method: "Crédito", installments: 12, fee_percent: 16.49, fee_fixed_brl: 0 },
-];
+const PAYMENT_FEES: Record<string, { installments: number; fee_percent: number }[]> = {
+  pix: [{ installments: 1, fee_percent: 0 }],
+  debit: [{ installments: 1, fee_percent: 1.37 }],
+  cash: [{ installments: 1, fee_percent: 0 }],
+  credit: [
+    { installments: 1, fee_percent: 4.98 },
+    { installments: 2, fee_percent: 7.29 },
+    { installments: 3, fee_percent: 8.39 },
+    { installments: 4, fee_percent: 9.49 },
+    { installments: 5, fee_percent: 10.59 },
+    { installments: 6, fee_percent: 11.69 },
+  ],
+};
 
-// Monthly sales distribution (Jul 2025 - Jan 2026)
-const MONTHLY_SALES = [
-  { year: 2025, month: 7, count: 15 },
-  { year: 2025, month: 8, count: 15 },
-  { year: 2025, month: 9, count: 25 },
-  { year: 2025, month: 10, count: 25 },
-  { year: 2025, month: 11, count: 35 },
-  { year: 2025, month: 12, count: 35 },
-  { year: 2026, month: 1, count: 25 },
-];
-
-// ========== UTILITY FUNCTIONS ==========
+// ==========================================
+// FUNÇÕES UTILITÁRIAS
+// ==========================================
 
 function randomBetween(min: number, max: number): number {
   return Math.floor(Math.random() * (max - min + 1)) + min;
-}
-
-function randomFloat(min: number, max: number): number {
-  return Math.random() * (max - min) + min;
 }
 
 function randomElement<T>(arr: T[]): T {
@@ -126,25 +118,33 @@ function weightedRandom<T extends { weight: number }>(items: T[]): T {
 }
 
 function generatePhone(): string {
-  const ddd = "31";
+  const ddd = randomElement(["31", "11", "21", "41", "51"]);
   const prefix = "9";
   const part1 = String(randomBetween(8000, 9999));
   const part2 = String(randomBetween(1000, 9999));
   return `(${ddd}) ${prefix}${part1}-${part2}`;
 }
 
-function randomDate(year: number, month: number, maxDay?: number): string {
+function dateInMonth(year: number, month: number, day?: number): string {
   const daysInMonth = new Date(year, month, 0).getDate();
-  const day = randomBetween(1, maxDay || daysInMonth);
-  return `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+  const d = day ?? randomBetween(1, daysInMonth);
+  return `${year}-${String(month).padStart(2, '0')}-${String(d).padStart(2, '0')}`;
 }
 
-function randomTimestamp(year: number, month: number, maxDay?: number): string {
-  const date = randomDate(year, month, maxDay);
-  const hour = randomBetween(8, 22);
+function timestampInMonth(year: number, month: number, day?: number): string {
+  const date = dateInMonth(year, month, day);
+  const hour = randomBetween(8, 21);
   const minute = randomBetween(0, 59);
   return `${date}T${String(hour).padStart(2, '0')}:${String(minute).padStart(2, '0')}:00.000Z`;
 }
+
+function round2(num: number): number {
+  return Math.round(num * 100) / 100;
+}
+
+// ==========================================
+// MAIN HANDLER
+// ==========================================
 
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
@@ -152,23 +152,20 @@ serve(async (req) => {
   }
 
   try {
-    // Get authorization header
     const authHeader = req.headers.get('authorization');
     if (!authHeader) {
       throw new Error('Missing authorization header');
     }
 
-    // Create Supabase client with user's token
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
     const supabaseAnonKey = Deno.env.get('SUPABASE_ANON_KEY')!;
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     
-    // Client with user token - for auth verification
+    // Verificar usuário admin
     const supabaseUser = createClient(supabaseUrl, supabaseAnonKey, {
       global: { headers: { Authorization: authHeader } }
     });
 
-    // Verify user is admin
     const { data: { user }, error: userError } = await supabaseUser.auth.getUser();
     if (userError || !user) {
       throw new Error('Unauthorized: Could not get user');
@@ -177,432 +174,481 @@ serve(async (req) => {
       throw new Error('Unauthorized: Admin access required');
     }
 
-    console.log(`🔐 Admin verified: ${user.email}`);
+    console.log(`🔐 Admin verificado: ${user.email}`);
 
-    // Service role client for admin operations
+    // Cliente com service role para operações admin
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Check if demo user already exists
+    // ==========================================
+    // 1. CRIAR/BUSCAR USUÁRIO DEMO
+    // ==========================================
+    
     const { data: existingUsers } = await supabase.auth.admin.listUsers();
     let demoUser = existingUsers?.users?.find(u => u.email === DEMO_EMAIL);
 
-    if (!demoUser) {
-      // Create demo user
+    if (demoUser) {
+      // LIMPAR dados anteriores da conta demo
+      console.log('🧹 Limpando dados anteriores da conta demo...');
+      const userId = demoUser.id;
+      
+      // Ordem de deleção respeitando foreign keys
+      await supabase.from('sale_item_lots').delete().eq('user_id', userId);
+      await supabase.from('sale_fixed_costs').delete().eq('user_id', userId);
+      await supabase.from('sale_items').delete().eq('user_id', userId);
+      await supabase.from('sales').delete().eq('user_id', userId);
+      await supabase.from('stock_movements').delete().eq('user_id', userId);
+      await supabase.from('inventory_lots').delete().eq('user_id', userId);
+      await supabase.from('purchase_items').delete().eq('user_id', userId);
+      await supabase.from('purchase_orders').delete().eq('user_id', userId);
+      await supabase.from('customers').delete().eq('user_id', userId);
+      await supabase.from('payment_fees').delete().eq('user_id', userId);
+      await supabase.from('payment_methods').delete().eq('user_id', userId);
+      await supabase.from('sales_channels').delete().eq('user_id', userId);
+      await supabase.from('fixed_costs').delete().eq('user_id', userId);
+      await supabase.from('product_variants').delete().eq('user_id', userId);
+      await supabase.from('products').delete().eq('user_id', userId);
+      await supabase.from('suppliers').delete().eq('user_id', userId);
+      
+      console.log('✅ Dados anteriores limpos');
+    } else {
+      // Criar novo usuário demo
       const { data: newUser, error: createError } = await supabase.auth.admin.createUser({
         email: DEMO_EMAIL,
         password: DEMO_PASSWORD,
         email_confirm: true,
-        user_metadata: { name: "Conta Demo" }
+        user_metadata: { name: "Conta Demo - Dash 26" }
       });
       
       if (createError) throw new Error(`Failed to create demo user: ${createError.message}`);
       demoUser = newUser.user;
-      console.log(`👤 Demo user created: ${DEMO_EMAIL}`);
-    } else {
-      console.log(`👤 Demo user exists: ${DEMO_EMAIL}`);
+      console.log(`👤 Usuário demo criado: ${DEMO_EMAIL}`);
     }
 
     const userId = demoUser.id;
 
-    // Check if data already seeded
-    const { count: existingSales } = await supabase
-      .from('sales')
-      .select('*', { count: 'exact', head: true })
-      .eq('user_id', userId);
+    // Criar profile se não existir
+    await supabase.from('profiles').upsert({
+      id: userId,
+      name: "Conta Demo",
+      updated_at: new Date().toISOString()
+    });
 
-    if (existingSales && existingSales > 10) {
-      return new Response(JSON.stringify({
-        success: true,
-        message: 'Demo data already exists',
-        stats: { existingSales }
-      }), {
-        headers: { ...corsHeaders, 'Content-Type': 'application/json' }
-      });
-    }
+    console.log('🌱 Iniciando seed de dados demo...');
 
-    // ========== SEED DATA ==========
-    console.log('🌱 Starting data seed...');
+    // ==========================================
+    // 2. CRIAR DADOS BASE
+    // ==========================================
 
-    // 1. Create suppliers
-    const supplierRecords = SUPPLIERS.map(s => ({ ...s, user_id: userId }));
-    const { data: suppliers, error: suppliersError } = await supabase
-      .from('suppliers')
-      .upsert(supplierRecords, { onConflict: 'user_id,name', ignoreDuplicates: true })
-      .select();
-    if (suppliersError) {
-      // If upsert fails, try insert
-      const { data: insertedSuppliers, error: insertError } = await supabase
-        .from('suppliers')
-        .insert(supplierRecords)
-        .select();
-      if (insertError) console.error('Suppliers error:', insertError);
-    }
-    
-    // Fetch suppliers to get IDs
-    const { data: allSuppliers } = await supabase
-      .from('suppliers')
-      .select('*')
-      .eq('user_id', userId);
-    console.log(`📦 Suppliers: ${allSuppliers?.length || 0}`);
+    // Fornecedores
+    const suppliersToInsert = SUPPLIERS.map(s => ({
+      user_id: userId,
+      name: s.name,
+      type: s.type,
+    }));
+    await supabase.from('suppliers').insert(suppliersToInsert);
+    const { data: suppliers } = await supabase.from('suppliers').select('*').eq('user_id', userId);
+    console.log(`📦 Fornecedores: ${suppliers?.length}`);
 
-    // 2. Create products and variants
-    const productRecords = PRODUCTS.map(p => ({ ...p, user_id: userId }));
-    await supabase.from('products').insert(productRecords);
-    
-    const { data: allProducts } = await supabase
-      .from('products')
-      .select('*')
-      .eq('user_id', userId);
-    console.log(`📦 Products: ${allProducts?.length || 0}`);
+    // Produtos
+    const productsToInsert = PRODUCTS.map(p => ({
+      user_id: userId,
+      label: p.label,
+      team: p.team,
+      season: p.season,
+    }));
+    await supabase.from('products').insert(productsToInsert);
+    const { data: products } = await supabase.from('products').select('*').eq('user_id', userId);
+    console.log(`📦 Produtos: ${products?.length}`);
 
-    // Create variants for each product
-    const variantRecords: any[] = [];
-    for (const product of allProducts || []) {
+    // Variantes (cada produto com 2 uniformes × 4 tamanhos = 8 variantes)
+    const variantsToInsert: any[] = [];
+    for (const product of products || []) {
       for (const uniform of UNIFORMS) {
         for (const size of SIZES) {
-          variantRecords.push({
-            product_id: product.id,
+          variantsToInsert.push({
             user_id: userId,
+            product_id: product.id,
             uniform,
-            size
+            size,
           });
         }
       }
     }
-    await supabase.from('product_variants').insert(variantRecords);
-    
-    const { data: allVariants } = await supabase
+    await supabase.from('product_variants').insert(variantsToInsert);
+    const { data: variants } = await supabase
       .from('product_variants')
       .select('*, products(*)')
       .eq('user_id', userId);
-    console.log(`📦 Variants: ${allVariants?.length || 0}`);
+    console.log(`📦 Variantes: ${variants?.length}`);
 
-    // 3. Create customers
-    const customerRecords: any[] = [];
-    for (let i = 0; i < 30; i++) {
-      customerRecords.push({
-        user_id: userId,
-        name: `${randomElement(CUSTOMER_FIRST_NAMES)} ${randomElement(CUSTOMER_LAST_NAMES)}`,
-        phone: generatePhone()
-      });
-    }
-    await supabase.from('customers').insert(customerRecords);
-    
-    const { data: allCustomers } = await supabase
-      .from('customers')
-      .select('*')
-      .eq('user_id', userId);
-    console.log(`👥 Customers: ${allCustomers?.length || 0}`);
-
-    // 4. Create sales channels
-    const channelRecords = SALES_CHANNELS.map(c => ({ name: c.name, user_id: userId }));
-    await supabase.from('sales_channels').insert(channelRecords);
-    
-    const { data: allChannels } = await supabase
-      .from('sales_channels')
-      .select('*')
-      .eq('user_id', userId);
-    console.log(`📢 Channels: ${allChannels?.length || 0}`);
-
-    // 5. Create payment methods
-    const methodRecords = PAYMENT_METHODS.map(m => ({ name: m.name, type: m.type, user_id: userId }));
-    await supabase.from('payment_methods').insert(methodRecords);
-    
-    const { data: allMethods } = await supabase
-      .from('payment_methods')
-      .select('*')
-      .eq('user_id', userId);
-    console.log(`💳 Payment methods: ${allMethods?.length || 0}`);
-
-    // 6. Create payment fees
-    const feeRecords = PAYMENT_FEES.map(f => {
-      const method = allMethods?.find(m => m.name === f.payment_method);
-      return {
-        payment_method: f.payment_method,
-        payment_method_id: method?.id || null,
-        installments: f.installments,
-        fee_percent: f.fee_percent,
-        fee_fixed_brl: f.fee_fixed_brl,
-        user_id: userId
-      };
-    });
-    await supabase.from('payment_fees').insert(feeRecords);
-    
-    const { data: allFees } = await supabase
-      .from('payment_fees')
-      .select('*')
-      .eq('user_id', userId);
-    console.log(`💰 Payment fees: ${allFees?.length || 0}`);
-
-    // 7. Create fixed costs
-    const fixedCostRecords = FIXED_COSTS.map(fc => ({
-      ...fc,
+    // Clientes
+    const customersToInsert = CUSTOMER_NAMES.map(name => ({
       user_id: userId,
-      unit_cost_brl: fc.total_cost_brl / fc.total_units,
-      remaining_units: fc.total_units,
-      is_active: true
+      name,
+      phone: generatePhone(),
     }));
-    await supabase.from('fixed_costs').insert(fixedCostRecords);
-    
-    const { data: allFixedCosts } = await supabase
-      .from('fixed_costs')
-      .select('*')
-      .eq('user_id', userId);
-    console.log(`📋 Fixed costs: ${allFixedCosts?.length || 0}`);
+    await supabase.from('customers').insert(customersToInsert);
+    const { data: customers } = await supabase.from('customers').select('*').eq('user_id', userId);
+    console.log(`👥 Clientes: ${customers?.length}`);
 
-    // 8. Create purchase orders
-    const xingsun = allSuppliers?.find(s => s.name === "XingSun");
-    const chinaSuppliers = allSuppliers?.filter(s => s.type === "internacional") || [];
-    
-    const purchaseOrders: any[] = [];
-    const purchaseItems: any[] = [];
-    const inventoryLots: any[] = [];
-    const stockMovementsIn: any[] = [];
+    // Canais de venda
+    const channelsToInsert = SALES_CHANNELS.map(c => ({
+      user_id: userId,
+      name: c.name,
+      is_active: true,
+    }));
+    await supabase.from('sales_channels').insert(channelsToInsert);
+    const { data: channels } = await supabase.from('sales_channels').select('*').eq('user_id', userId);
+    console.log(`📢 Canais: ${channels?.length}`);
 
-    // Generate 25 purchase orders spread over 6 months
-    for (let i = 0; i < 25; i++) {
-      const isBrazilian = i < 15; // 60% Brazilian
-      const supplier = isBrazilian ? xingsun : randomElement(chinaSuppliers);
-      
-      // Spread orders from June 2025 to January 2026
-      const monthIndex = Math.floor(i / 4);
-      const months = [
-        { year: 2025, month: 6 },
-        { year: 2025, month: 7 },
-        { year: 2025, month: 8 },
-        { year: 2025, month: 9 },
-        { year: 2025, month: 10 },
-        { year: 2025, month: 11 },
-        { year: 2025, month: 12 },
-      ];
-      const orderMonth = months[Math.min(monthIndex, months.length - 1)];
-      
-      const orderDate = randomDate(orderMonth.year, orderMonth.month);
-      const unitCost = isBrazilian ? 80 : 55;
-      const freightBrl = isBrazilian ? randomBetween(15, 30) : randomBetween(40, 80);
-      const arrivalTax = isBrazilian ? null : 75;
-      
-      const orderId = crypto.randomUUID();
-      const itemQty = randomBetween(3, 8); // items per order
-      
-      purchaseOrders.push({
-        id: orderId,
-        user_id: userId,
-        supplier_id: supplier?.id || null,
-        source: isBrazilian ? "brasil" : "china",
-        shipping_mode: isBrazilian ? null : (Math.random() > 0.5 ? "offline" : "remessa_conforme"),
-        status: "chegou",
-        stock_posted: true,
-        order_date: orderDate,
-        freight_brl: freightBrl,
-        extra_fees_brl: 0,
-        arrival_tax_brl: arrivalTax
-      });
+    // Métodos de pagamento
+    const methodsToInsert = PAYMENT_METHODS.map(m => ({
+      user_id: userId,
+      name: m.name,
+      type: m.type,
+      is_active: true,
+    }));
+    await supabase.from('payment_methods').insert(methodsToInsert);
+    const { data: paymentMethods } = await supabase.from('payment_methods').select('*').eq('user_id', userId);
+    console.log(`💳 Métodos de pagamento: ${paymentMethods?.length}`);
 
-      // Generate items for this order
-      const selectedVariants = [...(allVariants || [])].sort(() => Math.random() - 0.5).slice(0, itemQty);
-      
-      for (const variant of selectedVariants) {
-        const qty = randomBetween(2, 6);
-        const itemId = crypto.randomUUID();
-        
-        purchaseItems.push({
-          id: itemId,
+    // Taxas de pagamento
+    const feesToInsert: any[] = [];
+    for (const method of paymentMethods || []) {
+      const fees = PAYMENT_FEES[method.type] || [];
+      for (const fee of fees) {
+        feesToInsert.push({
           user_id: userId,
-          purchase_order_id: orderId,
-          variant_id: variant.id,
-          qty,
-          unit_cost_value: unitCost,
-          unit_cost_currency: "BRL",
-          usd_to_brl_rate: null
-        });
-
-        // Calculate loaded cost
-        const totalItemsCost = unitCost * itemQty * 4; // approximate total
-        const freightShare = (freightBrl / totalItemsCost) * unitCost;
-        const taxShare = arrivalTax ? (arrivalTax / totalItemsCost) * unitCost : 0;
-        const loadedCost = unitCost + freightShare + taxShare;
-
-        const lotId = crypto.randomUUID();
-        const receivedAt = randomTimestamp(orderMonth.year, orderMonth.month);
-        
-        inventoryLots.push({
-          id: lotId,
-          user_id: userId,
-          purchase_order_id: orderId,
-          purchase_item_id: itemId,
-          variant_id: variant.id,
-          qty_received: qty,
-          qty_remaining: qty,
-          unit_cost_brl: Math.round(loadedCost * 100) / 100,
-          cost_pending_tax: false,
-          received_at: receivedAt
-        });
-
-        stockMovementsIn.push({
-          user_id: userId,
-          variant_id: variant.id,
-          type: "in",
-          qty,
-          ref_type: "purchase_order",
-          ref_id: orderId,
-          movement_date: receivedAt
+          payment_method_id: method.id,
+          payment_method: method.name,
+          installments: fee.installments,
+          fee_percent: fee.fee_percent,
+          fee_fixed_brl: 0,
         });
       }
     }
+    await supabase.from('payment_fees').insert(feesToInsert);
+    const { data: fees } = await supabase.from('payment_fees').select('*').eq('user_id', userId);
+    console.log(`💰 Taxas: ${fees?.length}`);
 
-    await supabase.from('purchase_orders').insert(purchaseOrders);
-    await supabase.from('purchase_items').insert(purchaseItems);
-    await supabase.from('inventory_lots').insert(inventoryLots);
-    await supabase.from('stock_movements').insert(stockMovementsIn);
-    console.log(`📦 Purchase orders: ${purchaseOrders.length}`);
-    console.log(`📦 Purchase items: ${purchaseItems.length}`);
-    console.log(`📦 Inventory lots: ${inventoryLots.length}`);
+    // Custos fixos
+    const fixedCostsToInsert = FIXED_COSTS.map(fc => ({
+      user_id: userId,
+      name: fc.name,
+      total_cost_brl: fc.total_cost_brl,
+      total_units: fc.total_units,
+      unit_cost_brl: round2(fc.total_cost_brl / fc.total_units),
+      remaining_units: fc.total_units,
+      is_active: true,
+    }));
+    await supabase.from('fixed_costs').insert(fixedCostsToInsert);
+    const { data: fixedCosts } = await supabase.from('fixed_costs').select('*').eq('user_id', userId);
+    console.log(`📋 Custos fixos: ${fixedCosts?.length}`);
 
-    // Reload lots with current state
-    const { data: currentLots } = await supabase
-      .from('inventory_lots')
-      .select('*')
-      .eq('user_id', userId)
-      .order('received_at', { ascending: true });
-
-    // 9. Create sales
-    const sales: any[] = [];
-    const saleItems: any[] = [];
-    const saleItemLots: any[] = [];
-    const saleFixedCosts: any[] = [];
-    const stockMovementsOut: any[] = [];
-
-    // Track lot consumption
-    const lotQtyMap = new Map<string, number>();
-    for (const lot of currentLots || []) {
-      lotQtyMap.set(lot.id, lot.qty_remaining);
+    // ==========================================
+    // 3. MAPAS DE CONTROLE DE ESTOQUE
+    // ==========================================
+    
+    // Mapa de estoque disponível por variante
+    const stockByVariant = new Map<string, number>();
+    for (const v of variants || []) {
+      stockByVariant.set(v.id, 0);
     }
 
-    // Track fixed cost consumption
-    const fixedCostUnitsMap = new Map<string, number>();
-    for (const fc of allFixedCosts || []) {
-      fixedCostUnitsMap.set(fc.id, fc.remaining_units);
+    // Mapa de lotes por variante (FIFO)
+    interface LotInfo {
+      lotId: string;
+      variantId: string;
+      qtyRemaining: number;
+      unitCostBrl: number;
+      receivedAt: string;
+    }
+    const lotsByVariant = new Map<string, LotInfo[]>();
+    for (const v of variants || []) {
+      lotsByVariant.set(v.id, []);
     }
 
-    for (const monthData of MONTHLY_SALES) {
-      for (let i = 0; i < monthData.count; i++) {
-        const maxDay = monthData.year === 2026 && monthData.month === 1 ? 12 : undefined;
-        const saleDate = randomDate(monthData.year, monthData.month, maxDay);
-        const saleTimestamp = randomTimestamp(monthData.year, monthData.month, maxDay);
+    // Mapa de unidades restantes de custos fixos
+    const fixedCostUnits = new Map<string, number>();
+    for (const fc of fixedCosts || []) {
+      fixedCostUnits.set(fc.id, fc.remaining_units);
+    }
+
+    // Arrays para batch insert
+    const allPurchaseOrders: any[] = [];
+    const allPurchaseItems: any[] = [];
+    const allInventoryLots: any[] = [];
+    const allStockMovementsIn: any[] = [];
+    const allSales: any[] = [];
+    const allSaleItems: any[] = [];
+    const allSaleItemLots: any[] = [];
+    const allSaleFixedCosts: any[] = [];
+    const allStockMovementsOut: any[] = [];
+
+    // Estatísticas
+    let totalRevenue = 0;
+    let totalProfit = 0;
+    let salesCount = 0;
+
+    // ==========================================
+    // 4. GERAR COMPRAS E VENDAS POR MÊS
+    // ==========================================
+
+    for (const monthConfig of DEMO_MONTHS) {
+      const { year, month, salesTarget, purchaseTarget } = monthConfig;
+      const monthLabel = `${year}-${String(month).padStart(2, '0')}`;
+      console.log(`\n📅 Processando ${monthLabel}...`);
+
+      // ---- COMPRAS DO MÊS (no início do mês) ----
+      for (let po = 0; po < purchaseTarget; po++) {
+        // Escolher fornecedor
+        const supplierData = randomElement(SUPPLIERS);
+        const supplier = suppliers?.find(s => s.name === supplierData.name);
+        const isInternational = supplierData.type === "internacional";
+
+        // Gerar data no início do mês (dias 1-10)
+        const orderDate = dateInMonth(year, month, randomBetween(1, 10));
+        const receivedAt = timestampInMonth(year, month, randomBetween(5, 15));
+
+        const orderId = crypto.randomUUID();
+        const freightBrl = isInternational ? randomBetween(80, 150) : randomBetween(20, 50);
+        const arrivalTax = isInternational ? randomBetween(50, 120) : 0;
+
+        // Escolher 5-10 variantes aleatórias para esta compra
+        const shuffledVariants = [...(variants || [])].sort(() => Math.random() - 0.5);
+        const selectedVariants = shuffledVariants.slice(0, randomBetween(5, 10));
         
-        const channel = weightedRandom(SALES_CHANNELS.map(c => ({...c, data: allChannels?.find(ch => ch.name === c.name)})));
-        const paymentMethod = weightedRandom(PAYMENT_METHODS.map(m => ({...m, data: allMethods?.find(pm => pm.name === m.name)})));
+        let totalOrderCost = 0;
+        const itemsQty: { variantId: string; qty: number; unitCost: number }[] = [];
+
+        // Calcular custo total dos itens
+        for (const variant of selectedVariants) {
+          const productConfig = PRODUCTS.find(p => p.label === variant.products?.label);
+          const baseCost = productConfig?.baseCost || 75;
+          const unitCost = round2(baseCost * supplierData.costMultiplier);
+          const qty = randomBetween(3, 8); // 3-8 unidades por variante
+          
+          itemsQty.push({ variantId: variant.id, qty, unitCost });
+          totalOrderCost += unitCost * qty;
+        }
+
+        // Ordem de compra
+        allPurchaseOrders.push({
+          id: orderId,
+          user_id: userId,
+          supplier_id: supplier?.id || null,
+          source: isInternational ? "china" : "brasil",
+          shipping_mode: isInternational ? "remessa_conforme" : null,
+          status: "chegou",
+          stock_posted: true,
+          order_date: orderDate,
+          freight_brl: freightBrl,
+          extra_fees_brl: 0,
+          arrival_tax_brl: arrivalTax > 0 ? arrivalTax : null,
+        });
+
+        // Calcular custo carregado (frete + taxa distribuídos)
+        const totalExtraCost = freightBrl + arrivalTax;
+        const extraCostPerUnit = totalOrderCost > 0 ? totalExtraCost / totalOrderCost : 0;
+
+        // Itens da compra e lotes
+        for (const item of itemsQty) {
+          const itemId = crypto.randomUUID();
+          const lotId = crypto.randomUUID();
+          
+          // Custo carregado = custo unitário + proporção do frete/taxa
+          const loadedCost = round2(item.unitCost * (1 + extraCostPerUnit));
+
+          allPurchaseItems.push({
+            id: itemId,
+            user_id: userId,
+            purchase_order_id: orderId,
+            variant_id: item.variantId,
+            qty: item.qty,
+            unit_cost_value: item.unitCost,
+            unit_cost_currency: "BRL",
+            usd_to_brl_rate: null,
+          });
+
+          allInventoryLots.push({
+            id: lotId,
+            user_id: userId,
+            purchase_order_id: orderId,
+            purchase_item_id: itemId,
+            variant_id: item.variantId,
+            qty_received: item.qty,
+            qty_remaining: item.qty,
+            unit_cost_brl: loadedCost,
+            cost_pending_tax: false,
+            received_at: receivedAt,
+          });
+
+          allStockMovementsIn.push({
+            user_id: userId,
+            variant_id: item.variantId,
+            type: "in",
+            qty: item.qty,
+            ref_type: "purchase_order",
+            ref_id: orderId,
+            movement_date: receivedAt,
+          });
+
+          // Atualizar controle de estoque
+          const currentStock = stockByVariant.get(item.variantId) || 0;
+          stockByVariant.set(item.variantId, currentStock + item.qty);
+
+          // Adicionar lote ao mapa FIFO
+          const variantLots = lotsByVariant.get(item.variantId) || [];
+          variantLots.push({
+            lotId,
+            variantId: item.variantId,
+            qtyRemaining: item.qty,
+            unitCostBrl: loadedCost,
+            receivedAt,
+          });
+          lotsByVariant.set(item.variantId, variantLots);
+        }
+      }
+
+      console.log(`  📦 ${purchaseTarget} compras criadas`);
+
+      // ---- VENDAS DO MÊS (distribuídas ao longo do mês) ----
+      let salesThisMonth = 0;
+
+      for (let s = 0; s < salesTarget; s++) {
+        // Verificar se há estoque disponível
+        const availableVariants = [...stockByVariant.entries()]
+          .filter(([_, stock]) => stock > 0)
+          .map(([variantId]) => variants?.find(v => v.id === variantId))
+          .filter(Boolean);
+
+        if (availableVariants.length === 0) {
+          console.log(`  ⚠️ Sem estoque para mais vendas neste mês`);
+          break;
+        }
+
+        // Escolher variante com estoque (ponderado por popularidade)
+        const variantsWithStock = availableVariants.map(v => {
+          const productConfig = PRODUCTS.find(p => p.label === v?.products?.label);
+          return { variant: v, weight: productConfig?.popularity || 5 };
+        });
         
+        const selectedVariant = weightedRandom(variantsWithStock).variant;
+        if (!selectedVariant) continue;
+
+        const variantStock = stockByVariant.get(selectedVariant.id) || 0;
+        if (variantStock <= 0) continue;
+
+        // Quantidade da venda (1-3, mas não mais que o estoque)
+        const saleQty = Math.min(randomBetween(1, 2), variantStock);
+        if (saleQty <= 0) continue;
+
+        // Data da venda (distribuída pelo mês)
+        const maxDay = month === 1 && year === 2026 ? 12 : 28;
+        const saleDay = randomBetween(10, maxDay);
+        const saleDate = dateInMonth(year, month, saleDay);
+        const saleTimestamp = timestampInMonth(year, month, saleDay);
+
+        // Escolher canal e método de pagamento
+        const channel = weightedRandom(SALES_CHANNELS.map(c => ({
+          ...c,
+          data: channels?.find(ch => ch.name === c.name)
+        })));
+        
+        const paymentMethod = weightedRandom(PAYMENT_METHODS.map(m => ({
+          ...m,
+          data: paymentMethods?.find(pm => pm.name === m.name)
+        })));
+
+        // Parcelas
         let installments = 1;
         if (paymentMethod.name === "Crédito") {
-          const installRoll = Math.random();
-          if (installRoll < 0.8) installments = 1;
-          else if (installRoll < 0.95) installments = randomBetween(2, 3);
+          const roll = Math.random();
+          if (roll < 0.6) installments = 1;
+          else if (roll < 0.85) installments = randomBetween(2, 3);
           else installments = randomBetween(4, 6);
         }
 
-        // Get fee for this payment
-        const fee = allFees?.find(f => 
-          f.payment_method === paymentMethod.name && 
+        // Taxa
+        const feeConfig = fees?.find(f => 
+          f.payment_method_id === paymentMethod.data?.id && 
           f.installments === installments
         );
-        const feePercent = fee?.fee_percent || 0;
+        const feePercent = feeConfig?.fee_percent || 0;
 
-        const unitPrice = randomBetween(140, 180);
+        // Preço de venda
+        const productConfig = PRODUCTS.find(p => p.label === selectedVariant.products?.label);
+        const basePrice = productConfig?.basePrice || 149;
+        const unitPrice = basePrice + randomBetween(-10, 15); // Variação
+
+        // Desconto
         const discountRoll = Math.random();
         const discountPercent = discountRoll < 0.7 ? 0 : (discountRoll < 0.9 ? 5 : 10);
-        const shippingBrl = Math.random() < 0.4 ? 0 : randomBetween(10, 25);
-        const isPreorder = Math.random() < 0.05;
-        const customer = Math.random() < 0.7 ? randomElement(allCustomers || []) : null;
 
-        // Pick 1-3 items for sale
-        const itemCount = randomBetween(1, 3);
-        const saleId = crypto.randomUUID();
-        
-        let grossBrl = 0;
+        // Frete
+        const shippingBrl = Math.random() < 0.4 ? 0 : randomBetween(12, 25);
+
+        // Cliente
+        const customer = Math.random() < 0.75 ? randomElement(customers || []) : null;
+
+        // Consumir estoque FIFO
+        const variantLots = lotsByVariant.get(selectedVariant.id) || [];
+        let qtyToConsume = saleQty;
         let totalCogs = 0;
-        let cogsPending = false;
+        const consumedLots: { lotId: string; qty: number; unitCost: number }[] = [];
 
-        // Find available lots
-        const availableLots = (currentLots || []).filter(lot => 
-          (lotQtyMap.get(lot.id) || 0) > 0
-        );
+        for (const lot of variantLots) {
+          if (qtyToConsume <= 0) break;
+          if (lot.qtyRemaining <= 0) continue;
 
-        if (availableLots.length === 0) continue;
-
-        const selectedLotVariants = new Set<string>();
-        const itemsToCreate: any[] = [];
-
-        for (let j = 0; j < itemCount && availableLots.length > 0; j++) {
-          // Find a lot with available stock
-          const availableLotsNow = availableLots.filter(lot => 
-            (lotQtyMap.get(lot.id) || 0) > 0 && 
-            !selectedLotVariants.has(lot.variant_id)
-          );
-          
-          if (availableLotsNow.length === 0) break;
-
-          const lot = randomElement(availableLotsNow);
-          selectedLotVariants.add(lot.variant_id);
-          
-          const availableQty = lotQtyMap.get(lot.id) || 0;
-          const qty = Math.min(randomBetween(1, 2), availableQty);
-          
-          if (qty <= 0) continue;
-
-          // Get variant info
-          const variant = allVariants?.find(v => v.id === lot.variant_id);
-          if (!variant) continue;
-
-          const saleItemId = crypto.randomUUID();
-          const itemGross = unitPrice * qty;
-          grossBrl += itemGross;
-
-          itemsToCreate.push({
-            saleItemId,
-            variantId: lot.variant_id,
-            qty,
-            unitPrice,
-            lotId: lot.id,
-            unitCost: lot.unit_cost_brl,
-            productLabel: variant.products?.label || "Unknown",
-            uniform: variant.uniform,
-            size: variant.size
+          const consumeQty = Math.min(qtyToConsume, lot.qtyRemaining);
+          consumedLots.push({
+            lotId: lot.lotId,
+            qty: consumeQty,
+            unitCost: lot.unitCostBrl,
           });
 
-          // Consume from lot
-          lotQtyMap.set(lot.id, availableQty - qty);
-          totalCogs += lot.unit_cost_brl * qty;
+          totalCogs += lot.unitCostBrl * consumeQty;
+          lot.qtyRemaining -= consumeQty;
+          qtyToConsume -= consumeQty;
         }
 
-        if (itemsToCreate.length === 0) continue;
+        // Se não conseguiu consumir tudo, pular
+        if (qtyToConsume > 0) continue;
 
-        // Calculate financials
-        const grossAfterDiscount = grossBrl * (1 - discountPercent / 100);
-        const feesBrl = grossAfterDiscount * (feePercent / 100);
-        
-        // Apply fixed costs
+        // Atualizar estoque
+        const newStock = (stockByVariant.get(selectedVariant.id) || 0) - saleQty;
+        stockByVariant.set(selectedVariant.id, Math.max(0, newStock));
+
+        // Calcular valores financeiros
+        const grossBrl = unitPrice * saleQty;
+        const discountValue = round2(grossBrl * discountPercent / 100);
+        const grossAfterDiscount = round2(grossBrl - discountValue);
+        const feesBrl = round2(grossAfterDiscount * feePercent / 100);
+
+        // Custos fixos (aplicar 1 de cada se disponível)
         let fixedCostTotal = 0;
-        for (const fc of allFixedCosts || []) {
-          const remaining = fixedCostUnitsMap.get(fc.id) || 0;
+        const appliedFixedCosts: { fcId: string; unitCost: number }[] = [];
+        
+        for (const fc of fixedCosts || []) {
+          const remaining = fixedCostUnits.get(fc.id) || 0;
           if (remaining > 0) {
-            fixedCostTotal += fc.unit_cost_brl;
-            fixedCostUnitsMap.set(fc.id, remaining - 1);
-            
-            saleFixedCosts.push({
-              user_id: userId,
-              sale_id: saleId,
-              fixed_cost_id: fc.id,
-              unit_cost_applied: fc.unit_cost_brl
-            });
+            const unitCost = fc.unit_cost_brl || 0;
+            fixedCostTotal += unitCost;
+            appliedFixedCosts.push({ fcId: fc.id, unitCost });
+            fixedCostUnits.set(fc.id, remaining - 1);
           }
         }
 
-        const netProfit = grossAfterDiscount - feesBrl - shippingBrl - totalCogs - fixedCostTotal;
-        const marginPercent = grossAfterDiscount > 0 ? (netProfit / grossAfterDiscount) * 100 : 0;
+        // Lucro líquido
+        const netProfit = round2(grossAfterDiscount - feesBrl - shippingBrl - totalCogs - fixedCostTotal);
+        const marginPercent = grossAfterDiscount > 0 ? round2((netProfit / grossAfterDiscount) * 100) : 0;
 
-        sales.push({
+        const saleId = crypto.randomUUID();
+        const saleItemId = crypto.randomUUID();
+
+        // Sale
+        allSales.push({
           id: saleId,
           user_id: userId,
           customer_id: customer?.id || null,
@@ -614,105 +660,175 @@ serve(async (req) => {
           sale_date: saleDate,
           gross_brl: grossBrl,
           discount_percent: discountPercent,
-          discount_value_brl: grossBrl * discountPercent / 100,
+          discount_value_brl: discountValue,
           gross_after_discount_brl: grossAfterDiscount,
-          fees_brl: Math.round(feesBrl * 100) / 100,
+          fees_brl: feesBrl,
           shipping_brl: shippingBrl,
-          is_preorder: isPreorder,
-          product_costs_brl: Math.round(totalCogs * 100) / 100,
-          fixed_costs_brl: Math.round(fixedCostTotal * 100) / 100,
-          net_profit_brl: Math.round(netProfit * 100) / 100,
-          margin_percent: Math.round(marginPercent * 100) / 100,
-          cogs_pending: cogsPending,
-          created_at: saleTimestamp
+          is_preorder: false,
+          product_costs_brl: round2(totalCogs),
+          fixed_costs_brl: round2(fixedCostTotal),
+          net_profit_brl: netProfit,
+          margin_percent: marginPercent,
+          cogs_pending: false,
+          created_at: saleTimestamp,
         });
 
-        // Create sale items and related records
-        for (const item of itemsToCreate) {
-          saleItems.push({
-            id: item.saleItemId,
-            user_id: userId,
-            sale_id: saleId,
-            variant_id: item.variantId,
-            qty: item.qty,
-            unit_price_brl: item.unitPrice,
-            product_label_snapshot: item.productLabel,
-            uniform_snapshot: item.uniform,
-            size_snapshot: item.size
-          });
+        // Sale item
+        allSaleItems.push({
+          id: saleItemId,
+          user_id: userId,
+          sale_id: saleId,
+          variant_id: selectedVariant.id,
+          qty: saleQty,
+          unit_price_brl: unitPrice,
+          product_label_snapshot: selectedVariant.products?.label || "Produto",
+          uniform_snapshot: selectedVariant.uniform,
+          size_snapshot: selectedVariant.size,
+        });
 
-          saleItemLots.push({
+        // Sale item lots
+        for (const consumed of consumedLots) {
+          allSaleItemLots.push({
             user_id: userId,
-            sale_item_id: item.saleItemId,
-            inventory_lot_id: item.lotId,
-            qty_consumed: item.qty,
-            unit_cost_brl: item.unitCost
-          });
-
-          stockMovementsOut.push({
-            user_id: userId,
-            variant_id: item.variantId,
-            type: "out",
-            qty: item.qty,
-            ref_type: "sale",
-            ref_id: saleId,
-            movement_date: saleTimestamp
+            sale_item_id: saleItemId,
+            inventory_lot_id: consumed.lotId,
+            qty_consumed: consumed.qty,
+            unit_cost_brl: consumed.unitCost,
           });
         }
+
+        // Sale fixed costs
+        for (const afc of appliedFixedCosts) {
+          allSaleFixedCosts.push({
+            user_id: userId,
+            sale_id: saleId,
+            fixed_cost_id: afc.fcId,
+            unit_cost_applied: afc.unitCost,
+          });
+        }
+
+        // Stock movement out
+        allStockMovementsOut.push({
+          user_id: userId,
+          variant_id: selectedVariant.id,
+          type: "out",
+          qty: saleQty,
+          ref_type: "sale",
+          ref_id: saleId,
+          movement_date: saleTimestamp,
+        });
+
+        // Estatísticas
+        totalRevenue += grossAfterDiscount;
+        totalProfit += netProfit;
+        salesThisMonth++;
+        salesCount++;
+      }
+
+      console.log(`  💰 ${salesThisMonth} vendas criadas`);
+    }
+
+    // ==========================================
+    // 5. INSERIR TODOS OS DADOS NO BANCO
+    // ==========================================
+
+    console.log('\n💾 Inserindo dados no banco...');
+
+    // Compras
+    if (allPurchaseOrders.length > 0) {
+      await supabase.from('purchase_orders').insert(allPurchaseOrders);
+    }
+    if (allPurchaseItems.length > 0) {
+      await supabase.from('purchase_items').insert(allPurchaseItems);
+    }
+    if (allInventoryLots.length > 0) {
+      await supabase.from('inventory_lots').insert(allInventoryLots);
+    }
+    if (allStockMovementsIn.length > 0) {
+      await supabase.from('stock_movements').insert(allStockMovementsIn);
+    }
+
+    // Vendas
+    if (allSales.length > 0) {
+      await supabase.from('sales').insert(allSales);
+    }
+    if (allSaleItems.length > 0) {
+      await supabase.from('sale_items').insert(allSaleItems);
+    }
+    if (allSaleItemLots.length > 0) {
+      await supabase.from('sale_item_lots').insert(allSaleItemLots);
+    }
+    if (allSaleFixedCosts.length > 0) {
+      await supabase.from('sale_fixed_costs').insert(allSaleFixedCosts);
+    }
+    if (allStockMovementsOut.length > 0) {
+      await supabase.from('stock_movements').insert(allStockMovementsOut);
+    }
+
+    // Atualizar qty_remaining dos lotes
+    for (const [variantId, lots] of lotsByVariant.entries()) {
+      for (const lot of lots) {
+        await supabase
+          .from('inventory_lots')
+          .update({ qty_remaining: lot.qtyRemaining })
+          .eq('id', lot.lotId);
       }
     }
 
-    // Insert all sales data
-    await supabase.from('sales').insert(sales);
-    await supabase.from('sale_items').insert(saleItems);
-    await supabase.from('sale_item_lots').insert(saleItemLots);
-    await supabase.from('sale_fixed_costs').insert(saleFixedCosts);
-    await supabase.from('stock_movements').insert(stockMovementsOut);
-
-    // Update inventory lots with consumed quantities
-    for (const [lotId, remaining] of lotQtyMap.entries()) {
-      await supabase
-        .from('inventory_lots')
-        .update({ qty_remaining: remaining })
-        .eq('id', lotId);
-    }
-
-    // Update fixed costs with remaining units
-    for (const [fcId, remaining] of fixedCostUnitsMap.entries()) {
+    // Atualizar remaining_units dos custos fixos
+    for (const [fcId, remaining] of fixedCostUnits.entries()) {
       await supabase
         .from('fixed_costs')
         .update({ remaining_units: remaining })
         .eq('id', fcId);
     }
 
-    console.log(`💰 Sales: ${sales.length}`);
-    console.log(`📦 Sale items: ${saleItems.length}`);
-    console.log(`🔗 Sale item lots: ${saleItemLots.length}`);
-    console.log(`📋 Sale fixed costs: ${saleFixedCosts.length}`);
+    // ==========================================
+    // 6. CALCULAR ESTATÍSTICAS FINAIS
+    // ==========================================
+
+    // Contar estoque total
+    let totalStock = 0;
+    for (const [_, stock] of stockByVariant.entries()) {
+      totalStock += stock;
+    }
+
+    const avgMargin = salesCount > 0 ? round2(totalProfit / totalRevenue * 100) : 0;
+
+    console.log('\n✅ Seed concluído com sucesso!');
+    console.log(`📊 Estatísticas:`);
+    console.log(`   - Vendas: ${salesCount}`);
+    console.log(`   - Faturamento: R$ ${round2(totalRevenue).toLocaleString('pt-BR')}`);
+    console.log(`   - Lucro: R$ ${round2(totalProfit).toLocaleString('pt-BR')}`);
+    console.log(`   - Margem média: ${avgMargin}%`);
+    console.log(`   - Estoque restante: ${totalStock} itens`);
 
     return new Response(JSON.stringify({
       success: true,
-      message: 'Demo data seeded successfully',
+      message: 'Dados demo criados com sucesso!',
       credentials: {
         email: DEMO_EMAIL,
         password: DEMO_PASSWORD
       },
       stats: {
-        suppliers: allSuppliers?.length || 0,
-        products: allProducts?.length || 0,
-        variants: allVariants?.length || 0,
-        customers: allCustomers?.length || 0,
-        purchaseOrders: purchaseOrders.length,
-        sales: sales.length,
-        fixedCosts: allFixedCosts?.length || 0
+        suppliers: suppliers?.length || 0,
+        products: products?.length || 0,
+        variants: variants?.length || 0,
+        customers: customers?.length || 0,
+        purchaseOrders: allPurchaseOrders.length,
+        sales: salesCount,
+        totalStock,
+        revenue: round2(totalRevenue),
+        profit: round2(totalProfit),
+        avgMargin,
       }
     }), {
       headers: { ...corsHeaders, 'Content-Type': 'application/json' }
     });
 
   } catch (error: unknown) {
-    console.error('❌ Error:', error);
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error';
+    console.error('❌ Erro:', error);
+    const errorMessage = error instanceof Error ? error.message : 'Erro desconhecido';
     return new Response(JSON.stringify({
       success: false,
       error: errorMessage

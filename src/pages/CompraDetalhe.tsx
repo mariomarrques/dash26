@@ -167,10 +167,22 @@ export default function CompraDetalhe() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase_order", id] });
-      queryClient.invalidateQueries({ queryKey: ["purchase_orders"] });
-      queryClient.invalidateQueries({ queryKey: ["stock_movements"] });
-      queryClient.invalidateQueries({ queryKey: ["inventory_lots"] });
-      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["purchase_orders"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock_movements"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["inventory_lots"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock"],
+        refetchType: 'active'
+      });
       toast({ title: "Status atualizado!" });
       setNewStatus(null);
     },
@@ -218,10 +230,22 @@ export default function CompraDetalhe() {
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["purchase_order", id] });
-      queryClient.invalidateQueries({ queryKey: ["purchase_orders"] });
-      queryClient.invalidateQueries({ queryKey: ["inventory_lots"] });
-      queryClient.invalidateQueries({ queryKey: ["stock_movements"] });
-      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["purchase_orders"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["inventory_lots"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock_movements"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock"],
+        refetchType: 'active'
+      });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
       toast({ title: "Taxa adicionada!" });
       setShowTaxModal(false);
@@ -257,10 +281,22 @@ export default function CompraDetalhe() {
     },
     onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ["purchase_order", id] });
-      queryClient.invalidateQueries({ queryKey: ["purchase_orders"] });
-      queryClient.invalidateQueries({ queryKey: ["inventory_lots"] });
-      queryClient.invalidateQueries({ queryKey: ["stock_movements"] });
-      queryClient.invalidateQueries({ queryKey: ["stock"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["purchase_orders"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["inventory_lots"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock_movements"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock"],
+        refetchType: 'active'
+      });
       
       if (result.success) {
         toast({ 
@@ -316,7 +352,7 @@ export default function CompraDetalhe() {
 
   const showOfflineTaxButton = 
     purchase.source === "china" && 
-    purchase.shipping_mode === "offline" && 
+    (purchase.shipping_mode === "offline" || purchase.shipping_mode === "cssbuy") && 
     purchase.arrival_tax_brl === null;
 
   return (
@@ -475,9 +511,11 @@ export default function CompraDetalhe() {
                 <p className="text-sm text-muted-foreground">Taxas Extras</p>
                 <p className="text-lg font-semibold">R$ {purchase.extra_fees_brl.toFixed(2)}</p>
               </div>
-              {purchase.source === "china" && purchase.shipping_mode === "offline" && (
+              {purchase.source === "china" && (purchase.shipping_mode === "offline" || purchase.shipping_mode === "cssbuy") && (
                 <div>
-                  <p className="text-sm text-muted-foreground">Taxa Brasil</p>
+                  <p className="text-sm text-muted-foreground">
+                    {purchase.shipping_mode === "cssbuy" ? "Taxa" : "Taxa Brasil"}
+                  </p>
                   <p className="text-lg font-semibold">
                     {purchase.arrival_tax_brl !== null 
                       ? `R$ ${purchase.arrival_tax_brl.toFixed(2)}`

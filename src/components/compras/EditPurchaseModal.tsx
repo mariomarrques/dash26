@@ -97,12 +97,12 @@ export function EditPurchaseModal({ open, onOpenChange, purchase }: EditPurchase
 
   const isOfflinePending = 
     purchase?.source === "china" && 
-    purchase?.shipping_mode === "offline" && 
+    (purchase?.shipping_mode === "offline" || purchase?.shipping_mode === "cssbuy") && 
     purchase?.arrival_tax_brl === null;
 
   const canEditTax = 
     purchase?.source === "china" && 
-    purchase?.shipping_mode === "offline";
+    (purchase?.shipping_mode === "offline" || purchase?.shipping_mode === "cssbuy");
 
   const updateTaxMutation = useMutation({
     mutationFn: async () => {
@@ -139,6 +139,10 @@ export function EditPurchaseModal({ open, onOpenChange, purchase }: EditPurchase
       queryClient.invalidateQueries({ queryKey: ["inventory_lots"] });
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["sales"] });
+      // Invalidar dashboard para atualizar métricas
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['secondary-insights'] });
+      queryClient.invalidateQueries({ queryKey: ['team-profitability'] });
       toast({ title: "Taxa Brasil atualizada!" });
       onOpenChange(false);
     },
@@ -215,11 +219,26 @@ export function EditPurchaseModal({ open, onOpenChange, purchase }: EditPurchase
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["purchase_orders"] });
-      queryClient.invalidateQueries({ queryKey: ["inventory_lots"] });
-      queryClient.invalidateQueries({ queryKey: ["stock"] });
-      queryClient.invalidateQueries({ queryKey: ["stock_movements"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      queryClient.invalidateQueries({ 
+        queryKey: ["purchase_orders"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["inventory_lots"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock"],
+        refetchType: 'active'
+      });
+      queryClient.invalidateQueries({ 
+        queryKey: ["stock_movements"],
+        refetchType: 'active'
+      });
+      // Invalidar dashboard para atualizar métricas
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+      
       toast({ title: `Status alterado para "${statusLabels[selectedStatus]}"` });
       setShowStatusConfirm(false);
       onOpenChange(false);
@@ -302,7 +321,10 @@ export function EditPurchaseModal({ open, onOpenChange, purchase }: EditPurchase
       queryClient.invalidateQueries({ queryKey: ["inventory_lots"] });
       queryClient.invalidateQueries({ queryKey: ["stock"] });
       queryClient.invalidateQueries({ queryKey: ["stock_movements"] });
-      queryClient.invalidateQueries({ queryKey: ["dashboard"] });
+      // Invalidar dashboard para atualizar métricas
+      queryClient.invalidateQueries({ queryKey: ['dashboard-metrics'] });
+      queryClient.invalidateQueries({ queryKey: ['recent-activity'] });
+      queryClient.invalidateQueries({ queryKey: ['quick-stats'] });
       toast({ title: "Compra excluída com sucesso!" });
       setShowDeleteConfirm(false);
       onOpenChange(false);

@@ -189,7 +189,11 @@ export const useDashboardMetrics = (period: PeriodFilter) => {
         hasPendingCogs
       };
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -337,7 +341,9 @@ export const useSecondaryInsights = (period: PeriodFilter) => {
       const paymentLabels: Record<string, string> = {
         pix: 'Pix',
         debit: 'Débito',
-        credit: 'Crédito'
+        credit: 'Crédito',
+        cash: 'Dinheiro',
+        other: 'Outro'
       };
 
       let topPaymentMethod: SecondaryInsight | null = null;
@@ -356,7 +362,11 @@ export const useSecondaryInsights = (period: PeriodFilter) => {
 
       return { topProduct, mostProfitable, bestDay, topPaymentMethod };
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -420,7 +430,11 @@ export const useSalesChart = (period: PeriodFilter) => {
         };
       });
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -446,7 +460,9 @@ export const usePaymentDistribution = (period: PeriodFilter) => {
       const paymentLabels: Record<string, string> = {
         pix: 'Pix',
         debit: 'Débito',
-        credit: 'Crédito'
+        credit: 'Crédito',
+        cash: 'Dinheiro',
+        other: 'Outro'
       };
 
       const distribution = new Map<string, number>();
@@ -470,7 +486,11 @@ export const usePaymentDistribution = (period: PeriodFilter) => {
 
       return result.sort((a, b) => b.value - a.value);
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -654,7 +674,11 @@ export const useRecentActivity = () => {
         .sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime())
         .slice(0, 8);
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -707,7 +731,11 @@ export const useQuickStats = () => {
         lowStockCount
       };
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 };
 
@@ -835,6 +863,10 @@ export const useTeamProfitability = (period: PeriodFilter) => {
 
       return result.sort((a, b) => b.profit - a.profit);
     },
-    enabled: !!user?.id
+    enabled: !!user?.id,
+    staleTime: 1000 * 60 * 2, // 2 minutos
+    retry: 1,
+    retryDelay: 1000,
+    refetchOnWindowFocus: false,
   });
 };
