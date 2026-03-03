@@ -206,6 +206,7 @@ export type Database = {
         Row: {
           created_at: string
           id: string
+          personalization: string | null
           product_id: string
           size: string | null
           uniform: string | null
@@ -215,6 +216,7 @@ export type Database = {
         Insert: {
           created_at?: string
           id?: string
+          personalization?: string | null
           product_id: string
           size?: string | null
           uniform?: string | null
@@ -224,6 +226,7 @@ export type Database = {
         Update: {
           created_at?: string
           id?: string
+          personalization?: string | null
           product_id?: string
           size?: string | null
           uniform?: string | null
@@ -321,40 +324,61 @@ export type Database = {
       }
       purchase_items: {
         Row: {
+          country_snapshot: string | null
           created_at: string
           id: string
+          personalization_snapshot: string | null
           purchase_order_id: string
           qty: number
+          season_snapshot: string | null
+          size_snapshot: string | null
+          team_snapshot: string | null
           unit_cost_currency: string
           unit_cost_value: number
           updated_at: string
           usd_to_brl_rate: number | null
           user_id: string
+          uniform_snapshot: string | null
           variant_id: string | null
+          version_snapshot: string | null
         }
         Insert: {
+          country_snapshot?: string | null
           created_at?: string
           id?: string
+          personalization_snapshot?: string | null
           purchase_order_id: string
           qty: number
+          season_snapshot?: string | null
+          size_snapshot?: string | null
+          team_snapshot?: string | null
           unit_cost_currency?: string
           unit_cost_value: number
           updated_at?: string
           usd_to_brl_rate?: number | null
           user_id: string
+          uniform_snapshot?: string | null
           variant_id?: string | null
+          version_snapshot?: string | null
         }
         Update: {
+          country_snapshot?: string | null
           created_at?: string
           id?: string
+          personalization_snapshot?: string | null
           purchase_order_id?: string
           qty?: number
+          season_snapshot?: string | null
+          size_snapshot?: string | null
+          team_snapshot?: string | null
           unit_cost_currency?: string
           unit_cost_value?: number
           updated_at?: string
           usd_to_brl_rate?: number | null
           user_id?: string
+          uniform_snapshot?: string | null
           variant_id?: string | null
+          version_snapshot?: string | null
         }
         Relationships: [
           {
@@ -387,6 +411,7 @@ export type Database = {
           extra_fees_brl: number
           freight_brl: number
           id: string
+          lot_code: string | null
           notes: string | null
           order_date: string
           shipping_mode: string | null
@@ -403,6 +428,7 @@ export type Database = {
           extra_fees_brl?: number
           freight_brl?: number
           id?: string
+          lot_code?: string | null
           notes?: string | null
           order_date?: string
           shipping_mode?: string | null
@@ -419,6 +445,7 @@ export type Database = {
           extra_fees_brl?: number
           freight_brl?: number
           id?: string
+          lot_code?: string | null
           notes?: string | null
           order_date?: string
           shipping_mode?: string | null
@@ -855,7 +882,12 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      import_purchase_orders_csv: {
+        Args: {
+          p_groups: Json
+        }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never

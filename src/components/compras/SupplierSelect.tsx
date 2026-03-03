@@ -3,7 +3,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Select, SelectContent, SelectItem, SelectSeparator, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Plus, Store } from "lucide-react";
@@ -95,7 +95,9 @@ export function SupplierSelect({ value, onChange }: SupplierSelectProps) {
         </SelectTrigger>
         <SelectContent>
           {isLoading ? (
-            <div className="p-2 text-sm text-muted-foreground">Carregando...</div>
+            <SelectItem value="__loading__" disabled>
+              Carregando...
+            </SelectItem>
           ) : suppliers && suppliers.length > 0 ? (
             suppliers.map((supplier) => (
               <SelectItem key={supplier.id} value={supplier.id}>
@@ -108,19 +110,17 @@ export function SupplierSelect({ value, onChange }: SupplierSelectProps) {
               </SelectItem>
             ))
           ) : (
-            <div className="p-2 text-sm text-muted-foreground">
+            <SelectItem value="__empty__" disabled>
               Sem fornecedores ainda
-            </div>
+            </SelectItem>
           )}
-          <div className="border-t border-border mt-1 pt-1">
-            <button
-              className="w-full flex items-center gap-2 px-2 py-2 text-sm text-primary hover:bg-muted rounded-sm transition-colors"
-              onClick={() => setShowModal(true)}
-            >
+          <SelectSeparator />
+          <SelectItem value="__new__">
+            <span className="flex items-center gap-2 text-primary">
               <Plus size={14} />
               Adicionar fornecedor
-            </button>
-          </div>
+            </span>
+          </SelectItem>
         </SelectContent>
       </Select>
 

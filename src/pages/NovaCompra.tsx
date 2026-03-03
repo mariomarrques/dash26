@@ -11,7 +11,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, AlertCircle, Info, Loader2 } from "lucide-react";
+import { ArrowLeft, Save, AlertCircle, Info, Loader2, Upload } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
@@ -19,6 +19,7 @@ import { format } from "date-fns";
 import { SupplierSelect } from "@/components/compras/SupplierSelect";
 import { PurchaseItemsList, PurchaseItem } from "@/components/compras/PurchaseItemsList";
 import { CostSummary } from "@/components/compras/CostSummary";
+import { PurchaseCsvImportDialog } from "@/components/compras/PurchaseCsvImportDialog";
 
 // Interface for duplicated purchase data from location state
 interface DuplicatePurchaseData {
@@ -71,6 +72,7 @@ export default function NovaCompra() {
   const [orderDate, setOrderDate] = useState(format(new Date(), "yyyy-MM-dd"));
   const [status, setStatus] = useState<string>("comprado"); // Always start as "comprado" for new purchases
   const [notes, setNotes] = useState(duplicateFrom?.notes || "");
+  const [isCsvImportOpen, setIsCsvImportOpen] = useState(false);
   
   // Shipping & fees - initialized from duplicateFrom if available
   const [shippingMode, setShippingMode] = useState<string>(duplicateFrom?.shipping_mode || "remessa");
@@ -328,14 +330,20 @@ export default function NovaCompra() {
     <DashboardLayout title="Nova Compra">
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center gap-4">
-          <Button variant="ghost" size="icon" onClick={() => navigate("/compras")}>
-            <ArrowLeft size={20} />
-          </Button>
-          <div>
-            <h1 className="text-2xl font-bold text-foreground">Nova Compra</h1>
-            <p className="text-muted-foreground">Registre um novo pedido de compra</p>
+        <div className="flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => navigate("/compras")}>
+              <ArrowLeft size={20} />
+            </Button>
+            <div>
+              <h1 className="text-2xl font-bold text-foreground">Nova Compra</h1>
+              <p className="text-muted-foreground">Registre um novo pedido de compra</p>
+            </div>
           </div>
+          <Button variant="outline" className="gap-2" onClick={() => setIsCsvImportOpen(true)}>
+            <Upload size={18} />
+            Importar CSV
+          </Button>
         </div>
 
         {/* Bloco A - Informações do Pedido */}
@@ -567,6 +575,8 @@ export default function NovaCompra() {
           </Button>
         </div>
       </div>
+
+      <PurchaseCsvImportDialog open={isCsvImportOpen} onOpenChange={setIsCsvImportOpen} />
     </DashboardLayout>
   );
 }
